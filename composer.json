@@ -1,0 +1,62 @@
+{
+  "name": "data-dog/audit-bundle",
+  "type": "symfony-bundle",
+  "description": "Audit bundle for symfony2 and doctrine orm, logs any database change",
+  "keywords": ["audit", "log", "symfony2", "bundle", "doctrine", "orm"],
+  "homepage": "http://github.com/DATA-DOG/DataDogAuditBundle",
+  "license": "MIT",
+
+  "authors": [
+    {
+      "name": "DataDog Team",
+      "homepage": "http://datadog.lt"
+    },
+    {
+      "name": "Symfony2 Community",
+      "homepage": "http://github.com/DATA-DOG/DataDogAuditBundle/contributors"
+    }
+  ],
+
+  "require": {
+    "php": ">=5.4.0",
+    "symfony/framework-bundle": "~2.6",
+    "doctrine/orm": "~2.4"
+  },
+
+  "require-dev": {
+    "ext-pdo": "*",
+    "ext-pdo_sqlite": "*",
+
+    "symfony/symfony": "~2.7.0",
+    "doctrine/orm": "~2.5.0",
+    "doctrine/doctrine-bundle": "~1.5",
+    "doctrine/doctrine-fixtures-bundle": "~2.2.0",
+    "sensio/framework-extra-bundle": "~3.0.9",
+    "knplabs/knp-menu-bundle": "~2.0",
+    "data-dog/pager-bundle": "~0.1",
+
+    "phpunit/phpunit": "~4.7.0"
+  },
+
+  "autoload": {
+    "psr-4": {
+      "DataDog\\AuditBundle\\": "src/DataDog/AuditBundle"
+    }
+  },
+
+  "autoload-dev": {
+    "psr-4": {
+      "": "example/src/"
+    }
+  },
+
+  "archive": {
+    "exclude": ["vendor", "tests", "*phpunit.xml", ".travis.yml", "example", "Makefile", "screenshots"]
+  },
+
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.1.x-dev"
+    }
+  }
+}

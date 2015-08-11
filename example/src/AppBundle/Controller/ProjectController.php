@@ -21,10 +21,6 @@ class ProjectController extends Controller
         case 'p.name':
             if ($val) {
                 $qb->andWhere($qb->expr()->like('p.name', "'%{$val}%'"));
-            } else {
-                // this allows us to safely ignore empty values
-                // otherwise if $qb is not changed, it would add where the string is empty statement.
-                $qb->andWhere('1 = 1');
             }
             break;
         case 'p.hoursSpent':
@@ -44,7 +40,9 @@ class ProjectController extends Controller
             }
             break;
         case 'l.code':
-            return; // we allow this filter
+            $qb->andWhere($qb->expr()->eq('l.code', ':code'));
+            $qb->setParameter('code', $val);
+            break;
         default:
             // if user attemps to filter by other fields, we restrict it
             throw new \Exception("filter not allowed");
@@ -100,6 +98,6 @@ class ProjectController extends Controller
         $this->flush();
 
         // redirect to the list with the same filters applied as before
-        return $this->redirect($this->generateUrl('homepage', $request->query->all()));
+        return $this->redirect($this->generateUrl('projects', $request->query->all()));
     }
 }

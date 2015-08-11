@@ -1,0 +1,11 @@
+<div class="alert alert-danger" role="alert">
+  <strong>{{ log.source.typLabel }}</strong>
+  <a class="alert-link" href="#">{{ log.source.label }}</a> was dissociated from
+
+  <strong>{{ log.target.typLabel }}</strong>
+  <a class="alert-link" href="#">{{ log.target.label }}</a>
+  {% if log.blame %}
+    by <a class="alert-link" href="#">{{ log.blame.label }}</a>
+  {% endif %}
+  <span class="badge">{{ log.loggedAt|ago }}</span>
+</div>

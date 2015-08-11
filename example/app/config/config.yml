@@ -5,8 +5,15 @@ imports:
 parameters:
   locale: en
 
+services:
+  twig.audit.extension:
+    class: AppBundle\Twig\AuditExtension
+    tags:
+      - { name: twig.extension }
+
 framework:
   secret: "%secret%"
+  translator: { fallback: %locale% }
   router:
     resource: "%kernel.root_dir%/config/routing.yml"
     strict_requirements: true

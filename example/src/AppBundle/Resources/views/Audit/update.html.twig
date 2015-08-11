@@ -1,0 +1,39 @@
+<div class="alert alert-info" role="alert">
+  <strong>{{ log.source.typLabel }}</strong>
+  <a class="alert-link" href="#">{{ log.source.label }}</a> was updated,
+  {% if log.blame %}
+    by <a class="alert-link" href="#">{{ log.blame.label }}</a>,
+  {% endif %}
+  show <a class="alert-link" data-toggle="modal" data-target="#audit-{{ log.id }}" href="#">details</a>
+  <span class="badge">{{ log.loggedAt|ago }}</span>
+</div>
+
+<div class="modal fade" id="audit-{{ log.id }}" tabindex="-1" role="dialog" aria-labelledby="audit-label-{{ log.id }}">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="audit-label-{{ log.id }}">{{ log.source.label }}</h4>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <tr>
+            <th>Field</th>
+            <th>Old</th>
+            <th>New</th>
+          </tr>
+          {% for field, change in log.diff %}
+          <tr>
+            <td>{{ field }}</td>
+            <td>{{ audit_value(change.old) }}</td>
+            <td>{{ audit_value(change.new) }}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

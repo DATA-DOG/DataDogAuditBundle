@@ -1,0 +1,8 @@
+<div class="alert alert-danger" role="alert">
+  <strong>{{ log.source.typLabel }}</strong> #{{ log.source.fk }}
+  labeled as <strong>{{ log.source.label }}</strong> was removed
+  {% if log.blame %}
+    by <a class="alert-link" href="#">{{ log.blame.label }}</a>
+  {% endif %}
+  <span class="badge">{{ log.loggedAt|ago }}</span>
+</div>

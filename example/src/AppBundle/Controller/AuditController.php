@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\QueryBuilder;
@@ -23,11 +24,14 @@ class AuditController extends Controller
             } else {
                 // this allows us to safely ignore empty values
                 // otherwise if $qb is not changed, it would add where the string is empty statement.
-                $qb->andWhere($qb->expr()->eq('b.pk', $val));
+                $qb->andWhere($qb->expr()->eq('b.fk', ':blame'));
+                $qb->setParameter('blame', $val);
             }
             break;
-        case 's.class':
-            return; // we allow this filter
+        case 'class':
+            $qb->orWhere($qb->expr()->eq('s.class', ':class'), $qb->expr()->eq('t.class', ':class'));
+            $qb->setParameter('class', $val);
+            break;
         default:
             // if user attemps to filter by other fields, we restrict it
             throw new \Exception("filter not allowed");
@@ -41,6 +45,9 @@ class AuditController extends Controller
      */
     public function indexAction(Request $request)
     {
+        $this->someActions();
+        Pagination::$defaults = array_merge(Pagination::$defaults, ['limit' => 10]);
+
         $qb = $this->repo("DataDogAuditBundle:AuditLog")
             ->createQueryBuilder('a')
             ->addSelect('s', 't', 'b')
@@ -71,5 +78,32 @@ class AuditController extends Controller
 
         $logs = new Pagination($qb, $request, $options);
         return compact('logs', 'sourceClasses', 'users');
+    }
+
+    private function someActions()
+    {
+        $tag = $this->repo('AppBundle:Tag')->findOneByName('New');
+        if (!$tag) {
+            return; // already performed
+        }
+
+        $user = $this->repo('AppBundle:User')->findOneByUsername('luke');
+        $old = $this->get('security.token_storage')->getToken();
+        $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
+        $this->get('security.token_storage')->setToken($token);
+
+
+        $pager = $this->repo('AppBundle:Project')->findOneByCode('pg');
+        $pager->removeTag($tag);
+        $this->persist($pager);
+        $this->remove($tag);
+
+        $godog = $this->repo('AppBundle:Project')->findOneByCode('godog');
+        $godog->setName('Godog BDD framework');
+        $godog->setHoursSpent(85);
+        $this->persist($godog);
+
+        $this->flush();
+        $this->get('security.token_storage')->setToken($old);
     }
 }

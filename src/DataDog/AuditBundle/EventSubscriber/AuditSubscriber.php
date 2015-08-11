@@ -153,21 +153,9 @@ class AuditSubscriber implements EventSubscriber
 
     private function associate(EntityManager $em, $source, $target, array $mapping)
     {
-        $source = $this->assoc($em, $source);
-        $target = $this->assoc($em, $target);
-        // from one side
         $this->audit($em, [
-            'source' => $source,
-            'target' => $target,
-            'action' => 'associate',
-            'blame' => $this->blame($em),
-            'diff' => null,
-            'tbl' => $mapping['joinTable']['name'],
-        ]);
-        // from other side
-        $this->audit($em, [
-            'source' => $target,
-            'target' => $source,
+            'source' => $this->assoc($em, $source),
+            'target' => $this->assoc($em, $target),
             'action' => 'associate',
             'blame' => $this->blame($em),
             'diff' => null,
@@ -177,21 +165,9 @@ class AuditSubscriber implements EventSubscriber
 
     private function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
     {
-        $source = $this->assoc($em, $source);
-        $target = array_merge($this->assoc($em, $target), ['fk' => $id]);
-        // from one side
         $this->audit($em, [
-            'source' => $source,
-            'target' => $target,
-            'action' => 'dissociate',
-            'blame' => $this->blame($em),
-            'diff' => null,
-            'tbl' => $mapping['joinTable']['name'],
-        ]);
-        // from other side
-        $this->audit($em, [
-            'source' => $target,
-            'target' => $source,
+            'source' => $this->assoc($em, $source),
+            'target' => array_merge($this->assoc($em, $target), ['fk' => $id]),
             'action' => 'dissociate',
             'blame' => $this->blame($em),
             'diff' => null,
@@ -214,13 +190,17 @@ class AuditSubscriber implements EventSubscriber
 
     private function update(EntityManager $em, $entity, array $ch)
     {
+        $diff = $this->diff($em, $entity, $ch);
+        if (!$diff) {
+            return; // if there is no entity diff, do not log it
+        }
         $meta = $em->getClassMetadata(get_class($entity));
         $this->audit($em, [
             'action' => 'update',
             'source' => $this->assoc($em, $entity),
             'target' => null,
             'blame' => $this->blame($em),
-            'diff' => $this->diff($em, $entity, $ch),
+            'diff' => $diff,
             'tbl' => $meta->table['name'],
         ]);
     }

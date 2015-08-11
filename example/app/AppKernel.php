@@ -17,6 +17,7 @@ class AppKernel extends Kernel
             new Doctrine\Bundle\DoctrineBundle\DoctrineBundle(),
             new Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle(),
             new Knp\Bundle\MenuBundle\KnpMenuBundle(),
+            new Knp\Bundle\TimeBundle\KnpTimeBundle(),
             new DataDog\AuditBundle\DataDogAuditBundle(),
             new DataDog\PagerBundle\DataDogPagerBundle(),
             new AppBundle\AppBundle(),

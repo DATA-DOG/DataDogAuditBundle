@@ -5,57 +5,17 @@
     <h1>Paginated audit log</h1>
   </div>
 
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>{{ sorter_link(logs, "a.action", "Action") }}</th>
-        <th>{{ sorter_link(logs, "b.label", "User responsible") }}</th>
-        <th>{{ sorter_link(logs, "p.hoursSpent", "Hours Spent") }}</th>
-        <th>{{ sorter_link(logs, "l.code", "Language") }}</th>
-        <th></th>
-      </tr>
-
-      <tr role="row" class="filter">
-        <td></td>
-        <td></td>
-        <td>{{ filter_select(logs, "blamed", users) }}</td>
-        <td>{{ filter_select(logs, "s.class", sourceClasses) }}</td>
-        <td></td>
-        <td></td>
-      </tr>
-    </thead>
-    <tbody>
-      {% for log in logs %}
-        {% set act = 'success' %}
-        {% if log.action == 'dissociate' or log.action == 'remove' %}
-          {% set act = 'danger' %}
-        {% elseif log.action == 'update' %}
-          {% set act = 'info' %}
-        {% endif %}
-        <tr>
-          <td>
-          <i class="fa {% if act != 'danger' %}fa-check{% else %}fa-times{% endif %} text-{{ act }}"></i>
-            {{ log.id }}
-          </td>
-          <td>{{ log.action }}</td>
-          <td>{% if log.blame %}{{ log.blame.label }}{% else %}System{% endif %}</td>
-          <td>{{ log.source.typ }}</td>
-          {% if log.isOverDeadline %}
-            <td class="text-danger">{{ log.hoursSpent }}</td>
-          {% else %}
-            <td class="text-success">{{ log.hoursSpent }}</td>
-          {% endif %}
-          <td>{{ log.language.code }}</td>
-          <td>
-            <a href="{{ path("project_toggle", logs.query|merge({id: log.id})) }}" class="btn btn-xs btn-default">
-              {% if log.enabled %}Disable{% else %}Enable{% endif %}
-            </a>
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="row">
+    <div class="col-md-6">
+      {{ filter_select(logs, "blamed", users) }}
+    </div>
+    <div class="col-md-6">
+      {{ filter_select(logs, "class", sourceClasses) }}
+    </div>
+  </div>
+  {% for log in logs %}
+    {{ audit(log) }}
+  {% endfor %}
 
   <div class="panel-footer">
     {{ pagination(logs) }}

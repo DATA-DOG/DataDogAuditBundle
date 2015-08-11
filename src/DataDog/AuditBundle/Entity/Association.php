@@ -52,6 +52,12 @@ class Association
         return $this->typ;
     }
 
+    public function getTypLabel()
+    {
+        $words = explode('.', $this->getTyp());
+        return implode(' ', array_map('ucfirst', explode('_', end($words))));
+    }
+
     public function getTbl()
     {
         return $this->tbl;

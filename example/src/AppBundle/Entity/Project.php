@@ -50,7 +50,7 @@ class Project
     private $language;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Tag")
+     * @ORM\ManyToMany(targetEntity="Tag", cascade={"persist", "remove"})
      * @ORM\JoinTable(name="projects_tags")
      */
     private $tags;
@@ -147,7 +147,7 @@ class Project
     public function removeTag(Tag $tag)
     {
         if ($this->tags->contains($tag)) {
-            $this->tags->remove($tag);
+            $this->tags->removeElement($tag);
         }
         return $this;
     }

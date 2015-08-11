@@ -16,6 +16,13 @@ trait DoctrineControllerTrait
         $this->getDoctrine()->getManager()->flush($class);
     }
 
+    private function remove(...$entities)
+    {
+        foreach ($entities as $entity) {
+            $this->getDoctrine()->getManager()->remove($entity);
+        }
+    }
+
     private function repo($class)
     {
         return $this->getDoctrine()->getManager()->getRepository($class);

@@ -5,11 +5,21 @@ This bundle creates an audit log for all doctrine ORM database related changes:
 - inserts and updates including their diffs and relation field diffs.
 - many to many relation changes, association and dissociation actions.
 - if there is an user in token storage, it will link him to the log.
+- the audit entries are inserted within the same transaction during **flush**,
+if something fails the state remains clean.
 
 Basically you can track any change from these log entries if they were
 managed through standard **ORM** operations.
 
 **NOTE:** audit cannot track DQL or direct SQL updates or delete statement executions.
+
+## Install
+
+First, install it with composer:
+
+    composer require data-dog/audit-bundle
+
+Then, add it in your **AppKernel** bundles.
 
 ## Demo
 
@@ -22,14 +32,6 @@ Visit **http://localhost:8000/audit** to see the log actions.
 
 The demo application source is available in **example** directory and it is a basic
 symfony application.
-
-## Install
-
-First, install it with composer:
-
-    composer require data-dog/audit-bundle
-
-Then, add it in your **AppKernel** bundles.
 
 ## Usage
 
@@ -46,5 +48,5 @@ And all the database changes will be reflected in the audit log afterwards.
 
 ## License
 
-The pager is free to use and is licensed under the [MIT license](http://www.opensource.org/licenses/mit-license.php)
+The audit bundle is free to use and is licensed under the [MIT license](http://www.opensource.org/licenses/mit-license.php)
 

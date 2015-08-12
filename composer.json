@@ -24,6 +24,7 @@
   },
 
   "require-dev": {
+    "php": ">=5.6.0",
     "ext-pdo": "*",
     "ext-pdo_sqlite": "*",
 

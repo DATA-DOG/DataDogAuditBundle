@@ -1,11 +1,12 @@
-<div class="alert alert-danger" role="alert">
-  <strong>{{ log.source.typLabel }}</strong>
-  <a class="alert-link" href="#">{{ log.source.label }}</a> was dissociated from
-
-  <strong>{{ log.target.typLabel }}</strong>
-  <a class="alert-link" href="#">{{ log.target.label }}</a>
-  {% if log.blame %}
-    by <a class="alert-link" href="#">{{ log.blame.label }}</a>
-  {% endif %}
-  <span class="badge">{{ log.loggedAt|ago }}</span>
-</div>
+<tr>
+  <td class="col-min">
+    <span class="label label-warning"><i class="fa fa-random"></i></span>
+  </td>
+  <td>
+    <strong>{{ log.source.typLabel }}</strong> {{ audit_assoc(log.source) }} was dissociated from
+    <strong>{{ log.target.typLabel }}</strong> {{ audit_assoc(log.target) }},
+    {{ audit_blame(log.blame) }}
+  </td>
+  <td class="col-min">{{ time_diff(log.loggedAt) }}</td>
+  <td class="col-min"></td>
+</tr>

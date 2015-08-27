@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\QueryBuilder;
 use DataDog\PagerBundle\Pagination;
+use DataDog\AuditBundle\Entity\AuditLog;
 
 class AuditController extends Controller
 {
@@ -18,6 +19,24 @@ class AuditController extends Controller
     public function filters(QueryBuilder $qb, $key, $val)
     {
         switch ($key) {
+        case 'history':
+            if ($val) {
+                $orx = $qb->expr()->orX();
+                $orx->add('s.fk = :fk');
+                $orx->add('t.fk = :fk');
+
+                $qb->andWhere($orx);
+                $qb->setParameter('fk', intval($val));
+            }
+            break;
+        case 'class':
+            $orx = $qb->expr()->orX();
+            $orx->add('s.class = :class');
+            $orx->add('t.class = :class');
+
+            $qb->andWhere($orx);
+            $qb->setParameter('class', $val);
+            break;
         case 'blamed':
             if ($val === 'null') {
                 $qb->andWhere($qb->expr()->isNull('a.blame'));
@@ -27,10 +46,6 @@ class AuditController extends Controller
                 $qb->andWhere($qb->expr()->eq('b.fk', ':blame'));
                 $qb->setParameter('blame', $val);
             }
-            break;
-        case 'class':
-            $qb->orWhere($qb->expr()->eq('s.class', ':class'), $qb->expr()->eq('t.class', ':class'));
-            $qb->setParameter('class', $val);
             break;
         default:
             // if user attemps to filter by other fields, we restrict it
@@ -46,7 +61,7 @@ class AuditController extends Controller
     public function indexAction(Request $request)
     {
         $this->someActions();
-        Pagination::$defaults = array_merge(Pagination::$defaults, ['limit' => 10]);
+        Pagination::$defaults = array_merge(Pagination::$defaults, ['limit' => 25]);
 
         $qb = $this->repo("DataDogAuditBundle:AuditLog")
             ->createQueryBuilder('a')
@@ -62,22 +77,36 @@ class AuditController extends Controller
 
         $sourceClasses = [
             Pagination::$filterAny => 'Any Source Class',
-            'AppBundle\Entity\Project' => 'Project',
-            'AppBundle\Entity\Tag' => 'Tag',
-            'AppBundle\Entity\Language' => 'Language',
-            'AppBundle\Entity\User' => 'User',
         ];
+
+        foreach ($this->getDoctrine()->getManager()->getMetadataFactory()->getAllMetadata() as $meta) {
+            if ($meta->isMappedSuperclass || strpos($meta->name, 'DataDog\AuditBundle') === 0) {
+                continue;
+            }
+            $parts = explode('\\', $meta->name);
+            $sourceClasses[$meta->name] = end($parts);
+        }
 
         $users = [
             Pagination::$filterAny => 'Any User',
             'null' => 'Unknown',
         ];
         foreach ($this->repo('AppBundle:User')->findAll() as $user) {
-            $users[$user->getId()] = (string)$user;
+            $users[$user->getId()] = (string) $user;
         }
 
         $logs = new Pagination($qb, $request, $options);
         return compact('logs', 'sourceClasses', 'users');
+    }
+
+    /**
+     * @Route("/audit/diff/{id}")
+     * @Method("GET")
+     * @Template
+     */
+    public function diffAction(AuditLog $log)
+    {
+        return compact('log');
     }
 
     private function someActions()

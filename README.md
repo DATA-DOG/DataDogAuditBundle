@@ -40,10 +40,13 @@ And all the database changes will be reflected in the audit log afterwards.
 
 ## Screenshots
 
+All paginated audit log:
 ![Screenshot](https://raw.github.com/DATA-DOG/DataDogAuditBundle/master/screenshots/audit1.png)
 
+Clicked on history reference for specific resource:
 ![Screenshot](https://raw.github.com/DATA-DOG/DataDogAuditBundle/master/screenshots/audit2.png)
 
+Showing insert data:
 ![Screenshot](https://raw.github.com/DATA-DOG/DataDogAuditBundle/master/screenshots/audit3.png)
 
 ## License

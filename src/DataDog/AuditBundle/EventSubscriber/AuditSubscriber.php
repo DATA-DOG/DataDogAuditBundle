@@ -256,7 +256,9 @@ class AuditSubscriber implements EventSubscriber
             } else {
                 $typ = Type::getType(Type::BIGINT); // relation
             }
-
+            if (in_array($name, ['source', 'target', 'blame']) && $data[$name] === false) {
+                $data[$name] = null;
+            }
             $this->auditInsertStmt->bindValue($idx++, $data[$name], $typ);
         }
         $this->auditInsertStmt->execute();

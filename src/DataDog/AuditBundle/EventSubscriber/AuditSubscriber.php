@@ -240,7 +240,9 @@ class AuditSubscriber implements EventSubscriber
                 $this->assocInsertStmt->bindValue($idx++, $data[$field][$name], $typ);
             }
             $this->assocInsertStmt->execute();
-            $data[$field] = $this->getLastInsertId($em, $meta);
+            // use id generator, it will always use identity strategy, since our
+            // audit association explicitly sets that.
+            $data[$field] = $meta->idGenerator->generate($em, null);
         }
 
         $meta = $em->getClassMetadata(AuditLog::class);
@@ -255,6 +257,7 @@ class AuditSubscriber implements EventSubscriber
             } else {
                 $typ = Type::getType(Type::BIGINT); // relation
             }
+            // @TODO: this check may not be necessary, simply it ensures that empty values are nulled
             if (in_array($name, ['source', 'target', 'blame']) && $data[$name] === false) {
                 $data[$name] = null;
             }
@@ -368,13 +371,5 @@ class AuditSubscriber implements EventSubscriber
     public function getSubscribedEvents()
     {
         return [Events::onFlush];
-    }
-    
-    public function getLastInsertId(EntityManager $em, ClassMetadataInfo $meta)
-    {
-        if ($meta->idGenerator instanceof AssignedGenerator) {
-            return null; // @TODO custom ids are not handled yet
-        }
-        return $meta->idGenerator->generate($em, null);
     }
 }

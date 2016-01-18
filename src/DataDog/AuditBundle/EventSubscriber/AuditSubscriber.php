@@ -240,8 +240,7 @@ class AuditSubscriber implements EventSubscriber
                 $this->assocInsertStmt->bindValue($idx++, $data[$field][$name], $typ);
             }
             $this->assocInsertStmt->execute();
-            // @TODO: for postgresql may need sequence
-            $data[$field] = $c->lastInsertId();
+            $data[$field] = $this->getLastInsertId($em, $meta);
         }
 
         $meta = $em->getClassMetadata(AuditLog::class);
@@ -369,5 +368,13 @@ class AuditSubscriber implements EventSubscriber
     public function getSubscribedEvents()
     {
         return [Events::onFlush];
+    }
+    
+    public function getLastInsertId(EntityManager $em, ClassMetadataInfo $meta)
+    {
+        if ($meta->idGenerator instanceof AssignedGenerator) {
+            return null; // @TODO custom ids are not handled yet
+        }
+        return $meta->idGenerator->generate($em, null);
     }
 }

@@ -34,7 +34,7 @@ class Users implements ContainerAwareInterface, FixtureInterface, OrderedFixture
      */
     function load(ObjectManager $em)
     {
-        $users = ['joda', 'luke'];
+        $users = ['yoda', 'luke'];
         foreach ($users as $username) {
             $user = new User();
             $user->setFirstname(ucfirst($username));

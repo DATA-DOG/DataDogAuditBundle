@@ -111,9 +111,13 @@ class AuditSubscriber implements EventSubscriber
         $uow = $em->getUnitOfWork();
 
         $auditPersister = $uow->getEntityPersister(AuditLog::class);
-        $this->auditInsertStmt = $em->getConnection()->prepare($auditPersister->getInsertSql());
+        $rmAuditInsertSQL = new \ReflectionMethod($auditPersister, 'getInsertSQL');
+        $rmAuditInsertSQL->setAccessible(true);
+        $this->auditInsertStmt = $em->getConnection()->prepare($rmAuditInsertSQL->invoke($auditPersister));
         $assocPersister = $uow->getEntityPersister(Association::class);
-        $this->assocInsertStmt = $em->getConnection()->prepare($assocPersister->getInsertSql());
+        $rmAssocInsertSQL = new \ReflectionMethod($assocPersister, 'getInsertSQL');
+        $rmAssocInsertSQL->setAccessible(true);
+        $this->assocInsertStmt = $em->getConnection()->prepare($rmAssocInsertSQL->invoke($assocPersister));
 
         foreach ($this->updated as $entry) {
             list($entity, $ch) = $entry;

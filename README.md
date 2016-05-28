@@ -21,6 +21,17 @@ First, install it with composer:
 
 Then, add it in your **AppKernel** bundles.
 
+    // app/AppKernel.php
+    public function registerBundles()
+    {
+        $bundles = array(
+            ...
+            new DataDog\AuditBundle\DataDogAuditBundle(),
+            ...
+        );
+        ...
+    }
+
 ## Demo
 
 The best way to see features is to see the actual demo. Just clone the bundle

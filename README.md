@@ -32,6 +32,17 @@ Then, add it in your **AppKernel** bundles.
         ...
     }
 
+Finally, create the database tables used by the bundle:
+
+Using [Doctrine Migrations Bundle](http://symfony.com/doc/current/bundles/DoctrineMigrationsBundle/index.html):
+
+    php app/console doctrine:migrations:diff
+    php app/console doctrine:migrations:migrate
+    
+Using Doctrine Schema:
+    
+    php app/console doctrine:schema:update --force
+
 ## Demo
 
 The best way to see features is to see the actual demo. Just clone the bundle

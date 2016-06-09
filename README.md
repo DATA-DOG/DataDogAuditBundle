@@ -60,6 +60,16 @@ symfony application.
 **audit** entities will be mapped automatically if you run schema update or similar.
 And all the database changes will be reflected in the audit log afterwards.
 
+### Unaudited Entities
+
+Sometimes, you might not want to create audit log entries for particular entities.
+You can achieve this by listing those entities under the `unaudired_entities` configuuration
+key in your `config.yml`, for example:
+
+    data_dog_audit:
+        unaudited_entities:
+            - AppBundle\Entity\NoAuditForThis
+
 ## Screenshots
 
 All paginated audit log:

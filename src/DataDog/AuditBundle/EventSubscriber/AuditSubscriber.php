@@ -335,7 +335,7 @@ class AuditSubscriber implements EventSubscriber
     private function label(EntityManager $em, $entity)
     {
         if (is_callable($this->labeler)) {
-            return $this->labeler($entity);
+            return call_user_func($this->labeler, $entity);
         }
         $meta = $em->getClassMetadata(get_class($entity));
         switch (true) {

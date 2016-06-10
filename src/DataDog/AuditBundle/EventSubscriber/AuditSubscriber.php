@@ -31,6 +31,8 @@ class AuditSubscriber implements EventSubscriber
      */
     protected $securityTokenStorage;
 
+    private $unauditedEntities = [];
+
     private $inserted = []; // [$source, $changeset]
     private $updated = []; // [$source, $changeset]
     private $removed = []; // [$source, $id]
@@ -56,6 +58,24 @@ class AuditSubscriber implements EventSubscriber
         return $this->labeler;
     }
 
+    public function addUnauditedEntities(array $unauditedEntities)
+    {
+        // use entity names as array keys for easier lookup
+        foreach ($unauditedEntities as $unauditedEntity) {
+            $this->unauditedEntities[$unauditedEntity] = true;
+        }
+    }
+
+    public function getUnauditedEntities()
+    {
+        return array_keys($this->unauditedEntities);
+    }
+
+    private function isEntityUnaudited($entity)
+    {
+        return isset($this->unauditedEntities[get_class($entity)]);
+    }
+
     public function onFlush(OnFlushEventArgs $args)
     {
         $em = $args->getEntityManager();
@@ -73,33 +93,57 @@ class AuditSubscriber implements EventSubscriber
         $em->getConnection()->getConfiguration()->setSQLLogger($new);
 
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
+            if ($this->isEntityUnaudited($entity)) {
+                continue;
+            }
             $this->updated[] = [$entity, $uow->getEntityChangeSet($entity)];
         }
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
+            if ($this->isEntityUnaudited($entity)) {
+                continue;
+            }
             $this->inserted[] = [$entity, $ch = $uow->getEntityChangeSet($entity)];
         }
         foreach ($uow->getScheduledEntityDeletions() as $entity) {
+            if ($this->isEntityUnaudited($entity)) {
+                continue;
+            }
             $uow->initializeObject($entity);
             $this->removed[] = [$entity, $this->id($em, $entity)];
         }
         foreach ($uow->getScheduledCollectionUpdates() as $collection) {
+            if ($this->isEntityUnaudited($collection->getOwner())) {
+                continue;
+            }
             $mapping = $collection->getMapping();
             if (!$mapping['isOwningSide'] || $mapping['type'] !== ClassMetadataInfo::MANY_TO_MANY) {
                 continue; // ignore inverse side or one to many relations
             }
             foreach ($collection->getInsertDiff() as $entity) {
+                if ($this->isEntityUnaudited($entity)) {
+                    continue;
+                }
                 $this->associated[] = [$collection->getOwner(), $entity, $mapping];
             }
             foreach ($collection->getDeleteDiff() as $entity) {
+                if ($this->isEntityUnaudited($entity)) {
+                    continue;
+                }
                 $this->dissociated[] = [$collection->getOwner(), $entity, $this->id($em, $entity), $mapping];
             }
         }
         foreach ($uow->getScheduledCollectionDeletions() as $collection) {
+            if ($this->isEntityUnaudited($collection->getOwner())) {
+                continue;
+            }
             $mapping = $collection->getMapping();
             if (!$mapping['isOwningSide'] || $mapping['type'] !== ClassMetadataInfo::MANY_TO_MANY) {
                 continue; // ignore inverse side or one to many relations
             }
             foreach ($collection->toArray() as $entity) {
+                if ($this->isEntityUnaudited($entity)) {
+                    continue;
+                }
                 $this->dissociated[] = [$collection->getOwner(), $entity, $this->id($em, $entity), $mapping];
             }
         }
@@ -335,7 +379,7 @@ class AuditSubscriber implements EventSubscriber
     private function label(EntityManager $em, $entity)
     {
         if (is_callable($this->labeler)) {
-            return $this->labeler($entity);
+            return call_user_func($this->labeler, $entity);
         }
         $meta = $em->getClassMetadata(get_class($entity));
         switch (true) {

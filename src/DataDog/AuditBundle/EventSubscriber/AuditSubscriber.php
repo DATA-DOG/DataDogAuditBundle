@@ -70,7 +70,7 @@ class AuditSubscriber implements EventSubscriber
     {
         return array_keys($this->unauditedEntities);
     }
-    
+
     private function isEntityUnaudited($entity)
     {
         if ($entity instanceof Association || $entity instanceof AuditLog) {

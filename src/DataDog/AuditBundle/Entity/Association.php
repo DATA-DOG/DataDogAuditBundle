@@ -28,7 +28,7 @@ class Association
     private $tbl;
 
     /**
-     * @ORM\Column(nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $label;
 

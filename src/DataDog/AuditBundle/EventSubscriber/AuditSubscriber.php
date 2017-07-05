@@ -383,12 +383,12 @@ class AuditSubscriber implements EventSubscriber
         }
         $meta = $em->getClassMetadata(get_class($entity));
         switch (true) {
-        case $meta->hasField('title'):
-            return $meta->getReflectionProperty('title')->getValue($entity);
-        case $meta->hasField('name'):
-            return $meta->getReflectionProperty('name')->getValue($entity);
-        case $meta->hasField('label'):
-            return $meta->getReflectionProperty('label')->getValue($entity);
+        case $meta->getReflectionClass()->hasMethod('getTitle'):
+            return $entity->getTitle();
+        case $meta->getReflectionClass()->hasMethod('getName'):
+            return $entity->getName();
+        case $meta->getReflectionClass()->hasMethod('getLabel'):
+            return $entity->getLabel();
         case $meta->getReflectionClass()->hasMethod('__toString'):
             return (string)$entity;
         default:

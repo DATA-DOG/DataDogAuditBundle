@@ -14,6 +14,7 @@ DataDog\AuditBundle\Entity\Association:
       length: 128
     label:
       nullable: true
+      type: text
     fk:
       type: string
     class:

@@ -6,7 +6,10 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity
- * @ORM\Table(name="audit_logs")
+ * @ORM\Table(name="audit_logs", indexes={
+ *     @ORM\Index(name="idx_audit_logs_logged_at", columns={"logged_at"}),
+ *     @ORM\Index(name="idx_audit_logs_tbl", columns={"tbl"})
+ * })
  */
 class AuditLog
 {

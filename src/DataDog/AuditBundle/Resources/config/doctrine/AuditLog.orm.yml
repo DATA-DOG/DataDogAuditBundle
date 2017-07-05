@@ -1,6 +1,11 @@
 DataDog\AuditBundle\Entity\AuditLog:
   type: entity
   table: audit_logs
+  indexes:
+    idx_audit_logs_logged_at:
+      columns: [ logged_at ]
+    idx_audit_logs_tbl:
+        columns: [ tbl ]
   id:
     id:
       type: bigint

@@ -1,10 +1,14 @@
 <doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
   http://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
 
   <entity name="DataDog\AuditBundle\Entity\AuditLog" table="audit_logs">
 
+    <indexes>
+      <index name="idx_audit_logs_logged_at" columns="logged_at"/>
+      <index name="idx_audit_logs_tbl" columns="tbl"/>
+    </indexes>
     <id name="id" type="integer" column="id">
       <generator strategy="IDENTITY"/>
     </id>

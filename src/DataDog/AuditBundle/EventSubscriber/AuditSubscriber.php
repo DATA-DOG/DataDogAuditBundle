@@ -42,6 +42,9 @@ class AuditSubscriber implements EventSubscriber
     private $assocInsertStmt;
     private $auditInsertStmt;
 
+    /** @var UserInterface */
+    private $blameUser;
+
     public function __construct(TokenStorage $securityTokenStorage)
     {
         $this->securityTokenStorage = $securityTokenStorage;
@@ -409,6 +412,9 @@ class AuditSubscriber implements EventSubscriber
 
     protected function blame(EntityManager $em)
     {
+        if ($this->blameUser instanceof UserInterface) {
+            return $this->assoc($em, $this->blameUser);
+        }
         $token = $this->securityTokenStorage->getToken();
         if ($token && $token->getUser() instanceof UserInterface) {
             return $this->assoc($em, $token->getUser());
@@ -419,5 +425,10 @@ class AuditSubscriber implements EventSubscriber
     public function getSubscribedEvents()
     {
         return [Events::onFlush];
+    }
+
+    public function setBlameUser(UserInterface $user)
+    {
+        $this->blameUser = $user;
     }
 }

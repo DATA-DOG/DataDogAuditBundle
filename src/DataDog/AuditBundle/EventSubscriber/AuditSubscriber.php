@@ -270,7 +270,7 @@ class AuditSubscriber implements EventSubscriber
         ]);
     }
 
-    private function audit(EntityManager $em, array $data)
+    protected function audit(EntityManager $em, array $data)
     {
         $c = $em->getConnection();
         $p = $c->getDatabasePlatform();

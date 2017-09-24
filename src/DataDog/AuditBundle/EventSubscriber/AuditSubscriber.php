@@ -170,13 +170,13 @@ class AuditSubscriber implements EventSubscriber
         $rmCheckAssocSQL = new \ReflectionMethod($assocPersister, 'getSelectSQL');
         $rmCheckAssocSQL->setAccessible(true);
         $meta = $em->getClassMetadata(Association::class);
-        $fields = array();
+        $fields = array();        
         foreach ($meta->reflFields as $name => $f) {
             if ($meta->isIdentifier($name)) {
                 continue;
             }
             $fields[$name] = '';
-        }        
+        }
         $this->checkAssocExistsStmt = $em->getConnection()->prepare($rmCheckAssocSQL->invoke($assocPersister, $fields));
         //
         
@@ -309,13 +309,13 @@ class AuditSubscriber implements EventSubscriber
             }
             
             $this->checkAssocExistsStmt->execute();// NEW
-            if ( $this->checkAssocExistsStmt->rowCount() === 0){ //NEW
+            
+            if ( $this->checkAssocExistsStmt->rowCount() === 0 or !($dataAssoc = $this->checkAssocExistsStmt->fetch() ) ){ //NEW
                 $this->assocInsertStmt->execute();
                 // use id generator, it will always use identity strategy, since our
                 // audit association explicitly sets that.
                 $data[$field] = $meta->idGenerator->generate($em, null);
             } else {//NEW
-                $dataAssoc = $this->checkAssocExistsStmt->fetch();
                 $data[$field] = array_pop($dataAssoc);
             }
         }

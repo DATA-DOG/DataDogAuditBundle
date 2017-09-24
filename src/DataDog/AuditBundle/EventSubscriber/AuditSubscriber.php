@@ -1,6 +1,6 @@
 <?php
 
-namespace App\EventListener;
+namespace DataDog\AuditBundle\EventSubscriber;
 
 use DataDog\AuditBundle\DBAL\AuditLogger;
 use DataDog\AuditBundle\Entity\AuditLog;

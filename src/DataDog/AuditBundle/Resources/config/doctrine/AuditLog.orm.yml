@@ -7,7 +7,7 @@ DataDog\AuditBundle\Entity\AuditLog:
       generator:
         strategy: IDENTITY
 
-  oneToOne:
+  ManyToOne:
     source:
       targetEntity: Association
       joinColumn:

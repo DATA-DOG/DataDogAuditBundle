@@ -1,6 +1,6 @@
 <?php
 
-namespace DataDog\AuditBundle\EventSubscriber;
+namespace App\EventListener;
 
 use DataDog\AuditBundle\DBAL\AuditLogger;
 use DataDog\AuditBundle\Entity\AuditLog;
@@ -165,7 +165,21 @@ class AuditSubscriber implements EventSubscriber
         $rmAssocInsertSQL = new \ReflectionMethod($assocPersister, 'getInsertSQL');
         $rmAssocInsertSQL->setAccessible(true);
         $this->assocInsertStmt = $em->getConnection()->prepare($rmAssocInsertSQL->invoke($assocPersister));
-
+        
+        //NEW        
+        $rmCheckAssocSQL = new \ReflectionMethod($assocPersister, 'getSelectSQL');
+        $rmCheckAssocSQL->setAccessible(true);
+        $meta = $em->getClassMetadata(Association::class);
+        $fields = array();
+        foreach ($meta->reflFields as $name => $f) {
+            if ($meta->isIdentifier($name)) {
+                continue;
+            }
+            $fields[$name] = '';
+        }        
+        $this->checkAssocExistsStmt = $em->getConnection()->prepare($rmCheckAssocSQL->invoke($assocPersister, $fields));
+        //
+        
         foreach ($this->updated as $entry) {
             list($entity, $ch) = $entry;
             // the changeset might be updated from UOW extra updates
@@ -272,6 +286,7 @@ class AuditSubscriber implements EventSubscriber
 
     protected function audit(EntityManager $em, array $data)
     {
+        
         $c = $em->getConnection();
         $p = $c->getDatabasePlatform();
         $q = $em->getConfiguration()->getQuoteStrategy();
@@ -281,19 +296,28 @@ class AuditSubscriber implements EventSubscriber
                 continue;
             }
             $meta = $em->getClassMetadata(Association::class);
-            $idx = 1;
+            $idx = 0; //NEW
             foreach ($meta->reflFields as $name => $f) {
                 if ($meta->isIdentifier($name)) {
                     continue;
                 }
                 $typ = $meta->fieldMappings[$name]['type'];
 
-                $this->assocInsertStmt->bindValue($idx++, $data[$field][$name], $typ);
+                $this->assocInsertStmt->bindValue(++$idx, $data[$field][$name], $typ);
+                $this->checkAssocExistsStmt->bindValue($idx, $data[$field][$name], $typ); //NEW
+                
             }
-            $this->assocInsertStmt->execute();
-            // use id generator, it will always use identity strategy, since our
-            // audit association explicitly sets that.
-            $data[$field] = $meta->idGenerator->generate($em, null);
+            
+            $this->checkAssocExistsStmt->execute();// NEW
+            if ( $this->checkAssocExistsStmt->rowCount() === 0){ //NEW
+                $this->assocInsertStmt->execute();
+                // use id generator, it will always use identity strategy, since our
+                // audit association explicitly sets that.
+                $data[$field] = $meta->idGenerator->generate($em, null);
+            } else {//NEW
+                $dataAssoc = $this->checkAssocExistsStmt->fetch();
+                $data[$field] = array_pop($dataAssoc);
+            }
         }
 
         $meta = $em->getClassMetadata(AuditLog::class);

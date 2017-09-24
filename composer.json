@@ -1,9 +1,9 @@
 {
-  "name": "data-dog/audit-bundle",
+  "name": "rigosv/audit-bundle",
   "type": "symfony-bundle",
-  "description": "Audit bundle for symfony2 and doctrine orm, logs any database change",
+  "description": "Audit bundle for symfony2 and doctrine orm, logs any database change (Fork from data-dog/audit-bundle)",
   "keywords": ["audit", "log", "symfony2", "bundle", "doctrine", "orm"],
-  "homepage": "http://github.com/DATA-DOG/DataDogAuditBundle",
+  "homepage": "http://github.com/rigosv/DataDogAuditBundle",
   "license": "MIT",
 
   "authors": [

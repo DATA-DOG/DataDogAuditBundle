@@ -16,6 +16,7 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class AuditSubscriber implements EventSubscriber
 {
@@ -30,6 +31,8 @@ class AuditSubscriber implements EventSubscriber
      * @var TokenStorage
      */
     protected $securityTokenStorage;
+    
+    protected $session;
 
     private $unauditedEntities = [];
 
@@ -45,9 +48,10 @@ class AuditSubscriber implements EventSubscriber
     /** @var UserInterface */
     private $blameUser;
 
-    public function __construct(TokenStorage $securityTokenStorage)
+    public function __construct(TokenStorage $securityTokenStorage, Session $session)
     {
         $this->securityTokenStorage = $securityTokenStorage;
+        $this->session = $session;
     }
 
     public function setLabeler(callable $labeler = null)
@@ -289,8 +293,8 @@ class AuditSubscriber implements EventSubscriber
         
         $c = $em->getConnection();
         $p = $c->getDatabasePlatform();
-        $q = $em->getConfiguration()->getQuoteStrategy();
-
+        $q = $em->getConfiguration()->getQuoteStrategy();                
+                
         foreach (['source', 'target', 'blame'] as $field) {
             if (null === $data[$field]) {
                 continue;
@@ -304,24 +308,27 @@ class AuditSubscriber implements EventSubscriber
                 $typ = $meta->fieldMappings[$name]['type'];
 
                 $this->assocInsertStmt->bindValue(++$idx, $data[$field][$name], $typ);
-                $this->checkAssocExistsStmt->bindValue($idx, $data[$field][$name], $typ); //NEW
+                $this->checkAssocExistsStmt->bindValue($idx, $data[$field][$name], $typ);
                 
             }
             
-            $this->checkAssocExistsStmt->execute();// NEW
+            $this->checkAssocExistsStmt->execute();
             
-            if ( $this->checkAssocExistsStmt->rowCount() === 0 or !($dataAssoc = $this->checkAssocExistsStmt->fetch() ) ){ //NEW
+            if ( $this->checkAssocExistsStmt->rowCount() === 0 or !($dataAssoc = $this->checkAssocExistsStmt->fetch() ) ){ 
                 $this->assocInsertStmt->execute();
                 // use id generator, it will always use identity strategy, since our
                 // audit association explicitly sets that.
                 $data[$field] = $meta->idGenerator->generate($em, null);
-            } else {//NEW
+            } else {
                 $data[$field] = array_pop($dataAssoc);
             }
         }
 
         $meta = $em->getClassMetadata(AuditLog::class);
+        
         $data['loggedAt'] = new \DateTime();
+        $data['sessionId'] = $this->session->getId();
+        
         $idx = 1;
         foreach ($meta->reflFields as $name => $f) {
             if ($meta->isIdentifier($name)) {

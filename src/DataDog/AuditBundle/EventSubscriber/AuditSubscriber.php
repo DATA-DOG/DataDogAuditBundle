@@ -31,6 +31,7 @@ class AuditSubscriber implements EventSubscriber
      */
     protected $securityTokenStorage;
 
+    private $auditedEntities = [];
     private $unauditedEntities = [];
 
     private $inserted = []; // [$source, $changeset]
@@ -61,6 +62,14 @@ class AuditSubscriber implements EventSubscriber
         return $this->labeler;
     }
 
+    public function addAuditedEntities(array $auditedEntities)
+    {
+        // use entity names as array keys for easier lookup
+        foreach ($auditedEntities as $auditedEntity) {
+            $this->auditedEntities[$auditedEntity] = true;
+        }
+    }
+
     public function addUnauditedEntities(array $unauditedEntities)
     {
         // use entity names as array keys for easier lookup
@@ -76,7 +85,14 @@ class AuditSubscriber implements EventSubscriber
 
     private function isEntityUnaudited($entity)
     {
-        return isset($this->unauditedEntities[get_class($entity)]);
+        if (!empty($this->auditedEntities)) {
+            // only selected entities are audited
+            $isEntityUnaudited = !isset($this->auditedEntities[get_class($entity)]);
+        } else {
+            $isEntityUnaudited = isset($this->unauditedEntities[get_class($entity)]);
+        }
+
+        return $isEntityUnaudited;
     }
 
     public function onFlush(OnFlushEventArgs $args)

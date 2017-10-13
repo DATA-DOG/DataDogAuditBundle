@@ -33,7 +33,7 @@ class UserController extends Controller
     public function loginAction(User $user)
     {
         $token = new UsernamePasswordToken($user, null, 'main', $user->getRoles());
-        $this->get('security.context')->setToken($token);
+        $this->get('security.token_storage')->setToken($token);
         return $this->redirect($this->generateUrl('projects'));
     }
 }

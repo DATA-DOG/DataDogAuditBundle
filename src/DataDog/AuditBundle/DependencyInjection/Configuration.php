@@ -22,6 +22,16 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
+                ->arrayNode('audited_entities')
+                    ->canBeUnset()
+                    ->performNoDeepMerging()
+                    ->prototype('scalar')->end()
+                ->end()
+            ->end()
+        ;
+
+        $rootNode
+            ->children()
                 ->arrayNode('unaudited_entities')
                     ->canBeUnset()
                     ->performNoDeepMerging()

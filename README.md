@@ -63,12 +63,22 @@ And all the database changes will be reflected in the audit log afterwards.
 ### Unaudited Entities
 
 Sometimes, you might not want to create audit log entries for particular entities.
-You can achieve this by listing those entities under the `unaudired_entities` configuuration
+You can achieve this by listing those entities under the `unaudited_entities` configuration
 key in your `config.yml`, for example:
 
     data_dog_audit:
         unaudited_entities:
             - AppBundle\Entity\NoAuditForThis
+
+### Specify Audited Entities 
+
+Sometimes, it is also possible, that you want to create audit log entries only for particular entities. You can achieve it quite similar to unaudited entities. You can list them under the `audited_entities` configuration key in your `config.yml`, for example:
+
+    data_dog_audit:
+        audited_entities:
+            - AppBundle\Entity\AuditForThis
+
+You can specify either audited or unaudited entities. If both are specified, only audited entities would be taken into account.
 
 ## Screenshots
 

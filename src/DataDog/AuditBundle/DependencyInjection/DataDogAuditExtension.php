@@ -22,7 +22,7 @@ class DataDogAuditExtension extends Extension
 
         $auditSubscriber = $container->getDefinition('datadog.event_subscriber.audit');
 
-        if (isset($config['audited_entities'])) {
+        if (isset($config['audited_entities']) && !empty($config['audited_entities'])) {
             $auditSubscriber->addMethodCall('addAuditedEntities', array($config['audited_entities']));
         } else if (isset($config['unaudited_entities'])) {
             $auditSubscriber->addMethodCall('addUnauditedEntities', array($config['unaudited_entities']));

@@ -52,6 +52,11 @@ class AuditLog
      * @ORM\Column(type="datetime")
      */
     private $loggedAt;
+    
+    /**
+     * @ORM\Column(length=80)
+     */
+    private $sessionId;
 
     public function getId()
     {
@@ -68,6 +73,11 @@ class AuditLog
         return $this->tbl;
     }
 
+    public function getSessionId()
+    {
+        return $this->sessionId;
+    }
+    
     public function getSource()
     {
         return $this->source;

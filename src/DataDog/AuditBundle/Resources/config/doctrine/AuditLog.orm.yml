@@ -7,7 +7,7 @@ DataDog\AuditBundle\Entity\AuditLog:
       generator:
         strategy: IDENTITY
 
-  oneToOne:
+  ManyToOne:
     source:
       targetEntity: Association
       joinColumn:
@@ -27,3 +27,5 @@ DataDog\AuditBundle\Entity\AuditLog:
       nullable: true
     loggedAt:
       type: datetime
+    sessionId:
+      length: 80 

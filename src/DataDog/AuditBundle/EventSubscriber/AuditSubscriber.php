@@ -16,6 +16,7 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class AuditSubscriber implements EventSubscriber
 {
@@ -30,6 +31,8 @@ class AuditSubscriber implements EventSubscriber
      * @var TokenStorage
      */
     protected $securityTokenStorage;
+    
+    protected $session;
 
     private $auditedEntities = [];
     private $unauditedEntities = [];
@@ -46,9 +49,10 @@ class AuditSubscriber implements EventSubscriber
     /** @var UserInterface */
     private $blameUser;
 
-    public function __construct(TokenStorage $securityTokenStorage)
+    public function __construct(TokenStorage $securityTokenStorage, Session $session)
     {
         $this->securityTokenStorage = $securityTokenStorage;
+        $this->session = $session;
     }
 
     public function setLabeler(callable $labeler = null)
@@ -181,7 +185,21 @@ class AuditSubscriber implements EventSubscriber
         $rmAssocInsertSQL = new \ReflectionMethod($assocPersister, 'getInsertSQL');
         $rmAssocInsertSQL->setAccessible(true);
         $this->assocInsertStmt = $em->getConnection()->prepare($rmAssocInsertSQL->invoke($assocPersister));
-
+        
+        //NEW        
+        $rmCheckAssocSQL = new \ReflectionMethod($assocPersister, 'getSelectSQL');
+        $rmCheckAssocSQL->setAccessible(true);
+        $meta = $em->getClassMetadata(Association::class);
+        $fields = array();        
+        foreach ($meta->reflFields as $name => $f) {
+            if ($meta->isIdentifier($name)) {
+                continue;
+            }
+            $fields[$name] = '';
+        }
+        $this->checkAssocExistsStmt = $em->getConnection()->prepare($rmCheckAssocSQL->invoke($assocPersister, $fields));
+        //
+        
         foreach ($this->updated as $entry) {
             list($entity, $ch) = $entry;
             // the changeset might be updated from UOW extra updates
@@ -286,34 +304,47 @@ class AuditSubscriber implements EventSubscriber
         ]);
     }
 
-    private function audit(EntityManager $em, array $data)
+    protected function audit(EntityManager $em, array $data)
     {
+        
         $c = $em->getConnection();
         $p = $c->getDatabasePlatform();
-        $q = $em->getConfiguration()->getQuoteStrategy();
-
+        $q = $em->getConfiguration()->getQuoteStrategy();                
+                
         foreach (['source', 'target', 'blame'] as $field) {
             if (null === $data[$field]) {
                 continue;
             }
             $meta = $em->getClassMetadata(Association::class);
-            $idx = 1;
+            $idx = 0; //NEW
             foreach ($meta->reflFields as $name => $f) {
                 if ($meta->isIdentifier($name)) {
                     continue;
                 }
                 $typ = $meta->fieldMappings[$name]['type'];
 
-                $this->assocInsertStmt->bindValue($idx++, $data[$field][$name], $typ);
+                $this->assocInsertStmt->bindValue(++$idx, $data[$field][$name], $typ);
+                $this->checkAssocExistsStmt->bindValue($idx, $data[$field][$name], $typ);
+                
             }
-            $this->assocInsertStmt->execute();
-            // use id generator, it will always use identity strategy, since our
-            // audit association explicitly sets that.
-            $data[$field] = $meta->idGenerator->generate($em, null);
+            
+            $this->checkAssocExistsStmt->execute();
+            
+            if ( $this->checkAssocExistsStmt->rowCount() === 0 or !($dataAssoc = $this->checkAssocExistsStmt->fetch() ) ){ 
+                $this->assocInsertStmt->execute();
+                // use id generator, it will always use identity strategy, since our
+                // audit association explicitly sets that.
+                $data[$field] = $meta->idGenerator->generate($em, null);
+            } else {
+                $data[$field] = array_pop($dataAssoc);
+            }
         }
 
         $meta = $em->getClassMetadata(AuditLog::class);
+        
         $data['loggedAt'] = new \DateTime();
+        $data['sessionId'] = $this->session->getId();
+        
         $idx = 1;
         foreach ($meta->reflFields as $name => $f) {
             if ($meta->isIdentifier($name)) {

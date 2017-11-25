@@ -13,12 +13,13 @@
     <field name="tbl" length="128" />
     <field name="diff" type="json_array" nullable="true" />
     <field name="loggedAt" type="datetime" />
+    <field name="sessionId" length="80" />
 
-    <one-to-one field="source" target-entity="Association">
+    <many-to-one field="source" target-entity="Association">
       <join-column nullable="false" />
-    </one-to-one>
-    <one-to-one field="target" target-entity="Association" />
-    <one-to-one field="blame" target-entity="Association" />
+    </many-to-one>
+    <many-to-one field="target" target-entity="Association" />
+    <many-to-one field="blame" target-entity="Association" />
 
   </entity>
 

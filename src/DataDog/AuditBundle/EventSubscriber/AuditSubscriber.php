@@ -87,9 +87,22 @@ class AuditSubscriber implements EventSubscriber
     {
         if (!empty($this->auditedEntities)) {
             // only selected entities are audited
+            $isEntityUnaudited = TRUE;
+            foreach (array_keys($this->auditedEntities) as $auditedEntity) {
+                if (is_subclass_of($entity, $auditedEntity)) {
+                    $isEntityUnaudited = FALSE;
+                    break;
+                }
+            }
             $isEntityUnaudited = !isset($this->auditedEntities[get_class($entity)]);
         } else {
-            $isEntityUnaudited = isset($this->unauditedEntities[get_class($entity)]);
+            $isEntityUnaudited = FALSE;
+            foreach (array_keys($this->unauditedEntities) as $unauditedEntity) {
+                if (is_subclass_of($entity, $unauditedEntity)) {
+                    $isEntityUnaudited = TRUE;
+                    break;
+                }
+            }
         }
 
         return $isEntityUnaudited;

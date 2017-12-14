@@ -94,7 +94,6 @@ class AuditSubscriber implements EventSubscriber
                     break;
                 }
             }
-            $isEntityUnaudited = !isset($this->auditedEntities[get_class($entity)]);
         } else {
             $isEntityUnaudited = FALSE;
             foreach (array_keys($this->unauditedEntities) as $unauditedEntity) {

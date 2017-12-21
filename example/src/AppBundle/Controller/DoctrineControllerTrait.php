@@ -2,8 +2,17 @@
 
 namespace AppBundle\Controller;
 
+use Doctrine\ORM\EntityManager;
+
+/**
+ * Trait DoctrineControllerTrait
+ * @package AppBundle\Controller
+ *
+ * @method \Doctrine\Bundle\DoctrineBundle\Registry getDoctrine()
+ */
 trait DoctrineControllerTrait
 {
+
     private function persist(...$entities)
     {
         foreach ($entities as $entity) {
@@ -23,6 +32,10 @@ trait DoctrineControllerTrait
         }
     }
 
+    /**
+     * @param $class
+     * @return \Doctrine\Common\Persistence\ObjectRepository|EntityManager
+     */
     private function repo($class)
     {
         return $this->getDoctrine()->getManager()->getRepository($class);

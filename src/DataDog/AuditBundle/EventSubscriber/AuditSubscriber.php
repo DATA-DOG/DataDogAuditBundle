@@ -89,7 +89,7 @@ class AuditSubscriber implements EventSubscriber
             // only selected entities are audited
             $isEntityUnaudited = TRUE;
             foreach (array_keys($this->auditedEntities) as $auditedEntity) {
-                if (is_subclass_of($entity, $auditedEntity)) {
+                if ($entity instanceof $auditedEntity) {
                     $isEntityUnaudited = FALSE;
                     break;
                 }
@@ -97,7 +97,7 @@ class AuditSubscriber implements EventSubscriber
         } else {
             $isEntityUnaudited = FALSE;
             foreach (array_keys($this->unauditedEntities) as $unauditedEntity) {
-                if (is_subclass_of($entity, $unauditedEntity)) {
+                if ($entity instanceof $unauditedEntity) {
                     $isEntityUnaudited = TRUE;
                     break;
                 }

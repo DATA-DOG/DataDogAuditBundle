@@ -19,7 +19,7 @@
 
   "require": {
     "php": ">=5.4.0",
-    "symfony/framework-bundle": "^2.6|^3.0",
+    "symfony/framework-bundle": "^2.6|^3.0|^4.0",
     "doctrine/orm": "^2.4"
   },
 
@@ -28,7 +28,7 @@
     "ext-pdo": "*",
     "ext-pdo_sqlite": "*",
 
-    "symfony/symfony": "^3.0",
+    "symfony/symfony": "^3.0|^4.0",
     "doctrine/orm": "^2.5",
     "doctrine/doctrine-bundle": "^1.6",
     "doctrine/doctrine-fixtures-bundle": "^2.2",

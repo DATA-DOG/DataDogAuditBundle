@@ -16,6 +16,9 @@ DataDog\AuditBundle\Entity\AuditLog:
       targetEntity: Association
     blame:
       targetEntity: Association
+  manyToOne:
+    project:
+      targetEntity: AppBundle\Entity\Project
 
   fields:
     action:

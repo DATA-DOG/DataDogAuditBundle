@@ -17,8 +17,11 @@
     <one-to-one field="source" target-entity="Association">
       <join-column nullable="false" />
     </one-to-one>
+
     <one-to-one field="target" target-entity="Association" />
     <one-to-one field="blame" target-entity="Association" />
+
+    <many-to-one field="project" target-entity="AppBundle\Entity\Project" />
 
   </entity>
 

@@ -2,6 +2,7 @@
 
 namespace DataDog\AuditBundle\Entity;
 
+use AppBundle\Entity\Project;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -16,6 +17,12 @@ class AuditLog
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $id;
+
+    /**
+     * @var Project
+     * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Project", cascade={"persist"})
+     */
+    private $project;
 
     /**
      * @ORM\Column(length=12)
@@ -92,4 +99,9 @@ class AuditLog
     {
         return $this->loggedAt;
     }
+
+  public function getProject() {
+    return $this->project;
+  }
+
 }

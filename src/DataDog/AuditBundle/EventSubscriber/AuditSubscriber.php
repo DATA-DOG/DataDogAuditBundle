@@ -426,6 +426,8 @@ class AuditSubscriber implements EventSubscriber
         }
         $meta = $em->getClassMetadata(get_class($entity));
         switch (true) {
+          case $meta->hasField('path'):
+            return $meta->getReflectionProperty('path')->getValue($entity);
         case $meta->hasField('title'):
             return $meta->getReflectionProperty('title')->getValue($entity);
         case $meta->hasField('name'):
@@ -435,7 +437,7 @@ class AuditSubscriber implements EventSubscriber
         case $meta->getReflectionClass()->hasMethod('__toString'):
             return (string)$entity;
         default:
-            return "Unlabeled";
+            return "Unavngivet";
         }
     }
 

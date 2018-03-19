@@ -233,46 +233,50 @@ class AuditSubscriber implements EventSubscriber
     private function associate(EntityManager $em, $source, $target, array $mapping)
     {
       $token = $this->securityTokenStorage->getToken();
-
-        $this->audit($em, [
-            'project' => $token->getUser()->getProject()->getId(),
-            'source' => $this->assoc($em, $source),
-            'target' => $this->assoc($em, $target),
-            'action' => 'associate',
-            'blame' => $this->blame($em),
-            'diff' => null,
-            'tbl' => $mapping['joinTable']['name'],
-        ]);
+        if ($token->getUser()) {
+            $this->audit($em, [
+                'project' => $token->getUser()->getProject()->getId(),
+                'source' => $this->assoc($em, $source),
+                'target' => $this->assoc($em, $target),
+                'action' => 'associate',
+                'blame' => $this->blame($em),
+                'diff' => null,
+                'tbl' => $mapping['joinTable']['name'],
+            ]);
+        }
     }
 
     private function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
     {
         $token = $this->securityTokenStorage->getToken();
-        $this->audit($em, [
-            'project' => $token->getUser()->getProject()->getId(),
-            'source' => $this->assoc($em, $source),
-            'target' => array_merge($this->assoc($em, $target), ['fk' => $id]),
-            'action' => 'dissociate',
-            'blame' => $this->blame($em),
-            'diff' => null,
-            'tbl' => $mapping['joinTable']['name'],
-        ]);
+        if ($token->getUser()) {
+            $this->audit($em, [
+                'project' => $token->getUser()->getProject()->getId(),
+                'source' => $this->assoc($em, $source),
+                'target' => array_merge($this->assoc($em, $target), ['fk' => $id]),
+                'action' => 'dissociate',
+                'blame' => $this->blame($em),
+                'diff' => null,
+                'tbl' => $mapping['joinTable']['name'],
+            ]);
+        }
     }
 
     private function insert(EntityManager $em, $entity, array $ch)
     {
         $token = $this->securityTokenStorage->getToken();
-
-        $meta = $em->getClassMetadata(get_class($entity));
-        $this->audit($em, [
-            'project' => $token->getUser()->getProject()->getId(),
-            'action' => 'insert',
-            'source' => $this->assoc($em, $entity),
-            'target' => null,
-            'blame' => $this->blame($em),
-            'diff' => $this->diff($em, $entity, $ch),
-            'tbl' => $meta->table['name'],
-        ]);
+        if ($token->getUser()) {
+            $meta = $em->getClassMetadata(get_class($entity));
+            $this->audit($em, [
+                'project' => $token->getUser()->getProject()->getId(),
+                'action' => 'insert',
+                'source' => $this->assoc($em, $entity),
+                'target' => null,
+                'blame' => $this->blame($em),
+                'diff' => $this->diff($em, $entity, $ch),
+                'tbl' => $meta->table['name'],
+            ]);
+        }
     }
 
     private function update(EntityManager $em, $entity, array $ch)
@@ -283,31 +287,35 @@ class AuditSubscriber implements EventSubscriber
         }
         $token = $this->securityTokenStorage->getToken();
         $meta = $em->getClassMetadata(get_class($entity));
-        $this->audit($em, [
-            'project' => $token->getUser()->getProject()->getId(),
-            'action' => 'update',
-            'source' => $this->assoc($em, $entity),
-            'target' => null,
-            'blame' => $this->blame($em),
-            'diff' => $diff,
-            'tbl' => $meta->table['name'],
-        ]);
+        if ($token->getUser()) {
+            $this->audit($em, [
+                'project' => $token->getUser()->getProject()->getId(),
+                'action' => 'update',
+                'source' => $this->assoc($em, $entity),
+                'target' => null,
+                'blame' => $this->blame($em),
+                'diff' => $diff,
+                'tbl' => $meta->table['name'],
+            ]);
+        }
     }
 
     private function remove(EntityManager $em, $entity, $id)
     {
         $token = $this->securityTokenStorage->getToken();
-        $meta = $em->getClassMetadata(get_class($entity));
-        $source = array_merge($this->assoc($em, $entity), ['fk' => $id]);
-        $this->audit($em, [
-            'project' => $token->getUser()->getProject()->getId(),
-            'action' => 'remove',
-            'source' => $source,
-            'target' => null,
-            'blame' => $this->blame($em),
-            'diff' => null,
-            'tbl' => $meta->table['name'],
-        ]);
+        if ($token->getUser()) {
+            $meta = $em->getClassMetadata(get_class($entity));
+            $source = array_merge($this->assoc($em, $entity), ['fk' => $id]);
+            $this->audit($em, [
+                'project' => $token->getUser()->getProject()->getId(),
+                'action' => 'remove',
+                'source' => $source,
+                'target' => null,
+                'blame' => $this->blame($em),
+                'diff' => null,
+                'tbl' => $meta->table['name'],
+            ]);
+        }
     }
 
     private function audit(EntityManager $em, array $data)

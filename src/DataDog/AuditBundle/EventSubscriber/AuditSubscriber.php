@@ -233,7 +233,7 @@ class AuditSubscriber implements EventSubscriber
     private function associate(EntityManager $em, $source, $target, array $mapping)
     {
       $token = $this->securityTokenStorage->getToken();
-        if ($token->getUser()) {
+        if ($token) {
             $this->audit($em, [
                 'project' => $token->getUser()->getProject()->getId(),
                 'source' => $this->assoc($em, $source),
@@ -249,7 +249,7 @@ class AuditSubscriber implements EventSubscriber
     private function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
     {
         $token = $this->securityTokenStorage->getToken();
-        if ($token->getUser()) {
+        if ($token) {
             $this->audit($em, [
                 'project' => $token->getUser()->getProject()->getId(),
                 'source' => $this->assoc($em, $source),
@@ -265,7 +265,7 @@ class AuditSubscriber implements EventSubscriber
     private function insert(EntityManager $em, $entity, array $ch)
     {
         $token = $this->securityTokenStorage->getToken();
-        if ($token->getUser()) {
+        if ($token) {
             $meta = $em->getClassMetadata(get_class($entity));
             $this->audit($em, [
                 'project' => $token->getUser()->getProject()->getId(),
@@ -287,7 +287,7 @@ class AuditSubscriber implements EventSubscriber
         }
         $token = $this->securityTokenStorage->getToken();
         $meta = $em->getClassMetadata(get_class($entity));
-        if ($token->getUser()) {
+        if ($token) {
             $this->audit($em, [
                 'project' => $token->getUser()->getProject()->getId(),
                 'action' => 'update',
@@ -303,7 +303,7 @@ class AuditSubscriber implements EventSubscriber
     private function remove(EntityManager $em, $entity, $id)
     {
         $token = $this->securityTokenStorage->getToken();
-        if ($token->getUser()) {
+        if ($token) {
             $meta = $em->getClassMetadata(get_class($entity));
             $source = array_merge($this->assoc($em, $entity), ['fk' => $id]);
             $this->audit($em, [

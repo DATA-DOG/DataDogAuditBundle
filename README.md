@@ -80,6 +80,16 @@ Sometimes, it is also possible, that you want to create audit log entries only f
 
 You can specify either audited or unaudited entities. If both are specified, only audited entities would be taken into account.
 
+### Unaudited Roles
+
+Sometimes, you might not want to create audit log entries for particular roles.
+You can achieve this by listing those roles under the `unaudited_roles` configuration
+key in your `config.yml`, for example:
+
+    data_dog_audit:
+        unaudited_roles:
+            - ROLE_SUPER_ADMIN
+
 ## Screenshots
 
 All paginated audit log:

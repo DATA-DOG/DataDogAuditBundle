@@ -20,6 +20,7 @@
   "require": {
     "php": ">=5.4.0",
     "symfony/framework-bundle": "^2.6|^3.0|^4.0",
+    "symfony/security": "^4.0",
     "doctrine/orm": "^2.4"
   },
 

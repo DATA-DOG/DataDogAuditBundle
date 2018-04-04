@@ -433,8 +433,17 @@ class AuditSubscriber implements EventSubscriber
             return call_user_func($this->labeler, $entity);
         }
         $meta = $em->getClassMetadata(get_class($entity));
+
+        if ($meta->getReflectionClass()->getShortName() === 'ObservationsLog' &&
+            $entity->getParent()) {
+            return 'svar til ' . $entity->getParent()->getTitle();
+        }
+        if ($meta->getReflectionClass()->getShortName() === 'Projectbasis' &&
+            $entity->getRequirementsSpecification()) {
+            return 'til krav ' . $entity->getRequirementsSpecification()->getTitle();
+        }
         switch (true) {
-          case $meta->hasField('path'):
+        case $meta->hasField('path'):
             return $meta->getReflectionProperty('path')->getValue($entity);
         case $meta->hasField('title'):
             return $meta->getReflectionProperty('title')->getValue($entity);
@@ -442,6 +451,8 @@ class AuditSubscriber implements EventSubscriber
             return $meta->getReflectionProperty('name')->getValue($entity);
         case $meta->hasField('label'):
             return $meta->getReflectionProperty('label')->getValue($entity);
+        case $meta->hasField('number'):
+            return $meta->getReflectionProperty('number')->getValue($entity);
         case $meta->getReflectionClass()->hasMethod('__toString'):
             return (string)$entity;
         default:

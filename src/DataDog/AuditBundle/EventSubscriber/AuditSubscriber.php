@@ -365,11 +365,13 @@ class AuditSubscriber implements EventSubscriber
         foreach ($ch as $fieldName => list($old, $new)) {
             if ($meta->hasField($fieldName)) {
                 $mapping = $meta->fieldMappings[$fieldName];
-                $diff[$fieldName] = [
-                    'old' => $this->value($em, Type::getType($mapping['type']), $old),
-                    'new' => $this->value($em, Type::getType($mapping['type']), $new),
-                    'col' => $mapping['columnName'],
-                ];
+                if ($mapping['type'] != 'blob') {
+                    $diff[$fieldName] = [
+                        'old' => $this->value($em, Type::getType($mapping['type']), $old),
+                        'new' => $this->value($em, Type::getType($mapping['type']), $new),
+                        'col' => $mapping['columnName'],
+                    ];
+                }
             } elseif ($meta->hasAssociation($fieldName) && $meta->isSingleValuedAssociation($fieldName)) {
                 $mapping = $meta->associationMappings[$fieldName];
                 $colName = $meta->getSingleAssociationJoinColumnName($fieldName);

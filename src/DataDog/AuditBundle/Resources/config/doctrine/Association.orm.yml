@@ -12,6 +12,7 @@ DataDog\AuditBundle\Entity\Association:
       length: 128
     tbl:
       length: 128
+      nullable: true
     label:
       nullable: true
     fk:

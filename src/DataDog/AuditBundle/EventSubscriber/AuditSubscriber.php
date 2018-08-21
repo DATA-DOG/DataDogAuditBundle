@@ -389,11 +389,20 @@ class AuditSubscriber implements EventSubscriber
         if (null === $association) {
             return null;
         }
-        $meta = $em->getClassMetadata(get_class($association));
-        $res = ['class' => $meta->name, 'typ' => $this->typ($meta->name), 'tbl' => $meta->table['name']];
-        $em->getUnitOfWork()->initializeObject($association); // ensure that proxies are initialized
-        $res['fk'] = (string)$this->id($em, $association);
-        $res['label'] = $this->label($em, $association);
+
+        $meta = get_class($association);
+        $res = ['class' => $meta, 'typ' => $this->typ($meta), 'tbl' => null, 'label' => null];
+
+        try {
+            $meta = $em->getClassMetadata($meta);
+            $res['tbl'] = $meta->table['name'];
+            $em->getUnitOfWork()->initializeObject($association); // ensure that proxies are initialized
+            $res['fk'] = (string)$this->id($em, $association);
+            $res['label'] = $this->label($em, $association);
+        } catch (\Exception $e) {
+            $res['fk'] = (string) $association->getId();
+        }
+
         return $res;
     }
 

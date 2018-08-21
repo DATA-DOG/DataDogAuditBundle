@@ -83,6 +83,25 @@ class AuditSubscriber implements EventSubscriber
         return array_keys($this->unauditedEntities);
     }
 
+    public function log($action, $entity, EntityManager $em, array $data = [])
+    {
+        $meta = $em->getClassMetadata(get_class($entity));
+        $data = array_merge(
+            [
+                'action' => $action,
+                'source' => $this->assoc($em, $entity),
+                'target' => null,
+                'blame' => $this->blame($em),
+                'diff' => null,
+                'tbl' => $meta->table['name'],
+            ],
+            $data
+        );
+
+        $this->initPersisters($em);
+        $this->audit($em, $data);
+    }
+
     private function isEntityUnaudited($entity)
     {
         if (!empty($this->auditedEntities)) {
@@ -180,9 +199,8 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function flush(EntityManager $em)
+    private function initPersisters(EntityManager $em)
     {
-        $em->getConnection()->getConfiguration()->setSQLLogger($this->old);
         $uow = $em->getUnitOfWork();
 
         $auditPersister = $uow->getEntityPersister(AuditLog::class);
@@ -193,6 +211,14 @@ class AuditSubscriber implements EventSubscriber
         $rmAssocInsertSQL = new \ReflectionMethod($assocPersister, 'getInsertSQL');
         $rmAssocInsertSQL->setAccessible(true);
         $this->assocInsertStmt = $em->getConnection()->prepare($rmAssocInsertSQL->invoke($assocPersister));
+    }
+
+    private function flush(EntityManager $em)
+    {
+        $em->getConnection()->getConfiguration()->setSQLLogger($this->old);
+        $uow = $em->getUnitOfWork();
+
+        $this->initPersisters($em, $uow);
 
         foreach ($this->updated as $entry) {
             list($entity, $ch) = $entry;

@@ -7,6 +7,7 @@ use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Entity\Association;
 
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authorization\AuthorizationChecker;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Logging\LoggerChain;
@@ -30,9 +31,14 @@ class AuditSubscriber implements EventSubscriber
      * @var TokenStorage
      */
     protected $securityTokenStorage;
+    /**
+     * @var AuthorizationChecker
+     */
+    protected $authorizationChecker;
 
     private $auditedEntities = [];
     private $unauditedEntities = [];
+    private $unauditedRoles = [];
 
     private $inserted = []; // [$source, $changeset]
     private $updated = []; // [$source, $changeset]
@@ -46,9 +52,10 @@ class AuditSubscriber implements EventSubscriber
     /** @var UserInterface */
     private $blameUser;
 
-    public function __construct(TokenStorage $securityTokenStorage)
+    public function __construct(TokenStorage $securityTokenStorage, AuthorizationChecker $authorizationChecker)
     {
         $this->securityTokenStorage = $securityTokenStorage;
+        $this->authorizationChecker = $authorizationChecker;
     }
 
     public function setLabeler(callable $labeler = null)
@@ -83,23 +90,45 @@ class AuditSubscriber implements EventSubscriber
         return array_keys($this->unauditedEntities);
     }
 
+    public function addUnauditedRoles(array $unauditedRoles)
+    {
+        // use entity names as array keys for easier lookup
+        foreach ($unauditedRoles as $unauditedRol) {
+            $this->unauditedRoles[$unauditedRol] = true;
+        }
+    }
+
     private function isEntityUnaudited($entity)
     {
-        if (!empty($this->auditedEntities)) {
-            // only selected entities are audited
-            $isEntityUnaudited = TRUE;
-            foreach (array_keys($this->auditedEntities) as $auditedEntity) {
-                if ($entity instanceof $auditedEntity) {
-                    $isEntityUnaudited = FALSE;
-                    break;
+        $noAuditedRoles = TRUE;
+        if (!empty($this->unauditedRoles)) {
+            foreach (array_keys($this->unauditedRoles) as $unauditedRol) {
+                if ($unauditedRol) {
+                    if (true === $this->authorizationChecker->isGranted($unauditedRol)) {
+                        $noAuditedRoles = FALSE;
+                        $isEntityUnaudited = TRUE;
+                        break;
+                    }
                 }
             }
-        } else {
-            $isEntityUnaudited = FALSE;
-            foreach (array_keys($this->unauditedEntities) as $unauditedEntity) {
-                if ($entity instanceof $unauditedEntity) {
-                    $isEntityUnaudited = TRUE;
-                    break;
+        }
+        if ($noAuditedRoles) {
+            if (!empty($this->auditedEntities)) {
+                // only selected entities are audited
+                $isEntityUnaudited = TRUE;
+                foreach (array_keys($this->auditedEntities) as $auditedEntity) {
+                    if ($entity instanceof $auditedEntity) {
+                        $isEntityUnaudited = FALSE;
+                        break;
+                    }
+                }
+            } else {
+                $isEntityUnaudited = FALSE;
+                foreach (array_keys($this->unauditedEntities) as $unauditedEntity) {
+                    if ($entity instanceof $unauditedEntity) {
+                        $isEntityUnaudited = TRUE;
+                        break;
+                    }
                 }
             }
         }

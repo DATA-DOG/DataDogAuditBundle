@@ -24,27 +24,27 @@ class AuditSubscriber implements EventSubscriber
     /**
      * @var SQLLogger
      */
-    private $old;
+    protected $old;
 
     /**
      * @var TokenStorage
      */
     protected $securityTokenStorage;
 
-    private $auditedEntities = [];
-    private $unauditedEntities = [];
+    protected $auditedEntities = [];
+    protected $unauditedEntities = [];
 
-    private $inserted = []; // [$source, $changeset]
-    private $updated = []; // [$source, $changeset]
-    private $removed = []; // [$source, $id]
-    private $associated = [];   // [$source, $target, $mapping]
-    private $dissociated = []; // [$source, $target, $id, $mapping]
+    protected $inserted = []; // [$source, $changeset]
+    protected $updated = []; // [$source, $changeset]
+    protected $removed = []; // [$source, $id]
+    protected $associated = [];   // [$source, $target, $mapping]
+    protected $dissociated = []; // [$source, $target, $id, $mapping]
 
-    private $assocInsertStmt;
-    private $auditInsertStmt;
+    protected $assocInsertStmt;
+    protected $auditInsertStmt;
 
     /** @var UserInterface */
-    private $blameUser;
+    protected $blameUser;
 
     public function __construct(TokenStorage $securityTokenStorage)
     {
@@ -83,7 +83,7 @@ class AuditSubscriber implements EventSubscriber
         return array_keys($this->unauditedEntities);
     }
 
-    private function isEntityUnaudited($entity)
+    protected function isEntityUnaudited($entity)
     {
         if (!empty($this->auditedEntities)) {
             // only selected entities are audited
@@ -180,7 +180,7 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function flush(EntityManager $em)
+    protected function flush(EntityManager $em)
     {
         $em->getConnection()->getConfiguration()->setSQLLogger($this->old);
         $uow = $em->getUnitOfWork();
@@ -230,7 +230,7 @@ class AuditSubscriber implements EventSubscriber
         $this->dissociated = [];
     }
 
-    private function associate(EntityManager $em, $source, $target, array $mapping)
+    protected function associate(EntityManager $em, $source, $target, array $mapping)
     {
         $this->audit($em, [
             'source' => $this->assoc($em, $source),
@@ -242,7 +242,7 @@ class AuditSubscriber implements EventSubscriber
         ]);
     }
 
-    private function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
+    protected function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
     {
         $this->audit($em, [
             'source' => $this->assoc($em, $source),
@@ -254,7 +254,7 @@ class AuditSubscriber implements EventSubscriber
         ]);
     }
 
-    private function insert(EntityManager $em, $entity, array $ch)
+    protected function insert(EntityManager $em, $entity, array $ch)
     {
         $meta = $em->getClassMetadata(get_class($entity));
         $this->audit($em, [
@@ -267,7 +267,7 @@ class AuditSubscriber implements EventSubscriber
         ]);
     }
 
-    private function update(EntityManager $em, $entity, array $ch)
+    protected function update(EntityManager $em, $entity, array $ch)
     {
         $diff = $this->diff($em, $entity, $ch);
         if (!$diff) {
@@ -284,7 +284,7 @@ class AuditSubscriber implements EventSubscriber
         ]);
     }
 
-    private function remove(EntityManager $em, $entity, $id)
+    protected function remove(EntityManager $em, $entity, $id)
     {
         $meta = $em->getClassMetadata(get_class($entity));
         $source = array_merge($this->assoc($em, $entity), ['fk' => $id]);
@@ -298,7 +298,7 @@ class AuditSubscriber implements EventSubscriber
         ]);
     }
 
-    private function audit(EntityManager $em, array $data)
+    protected function audit(EntityManager $em, array $data)
     {
         $c = $em->getConnection();
         $p = $c->getDatabasePlatform();
@@ -345,7 +345,7 @@ class AuditSubscriber implements EventSubscriber
         $this->auditInsertStmt->execute();
     }
 
-    private function id(EntityManager $em, $entity)
+    protected function id(EntityManager $em, $entity)
     {
         $meta = $em->getClassMetadata(get_class($entity));
         $pk = $meta->getSingleIdentifierFieldName();
@@ -357,7 +357,7 @@ class AuditSubscriber implements EventSubscriber
         return $pk;
     }
 
-    private function diff(EntityManager $em, $entity, array $ch)
+    protected function diff(EntityManager $em, $entity, array $ch)
     {
         $uow = $em->getUnitOfWork();
         $meta = $em->getClassMetadata(get_class($entity));
@@ -384,7 +384,7 @@ class AuditSubscriber implements EventSubscriber
         return $diff;
     }
 
-    private function assoc(EntityManager $em, $association = null)
+    protected function assoc(EntityManager $em, $association = null)
     {
         if (null === $association) {
             return null;
@@ -406,7 +406,7 @@ class AuditSubscriber implements EventSubscriber
         return $res;
     }
 
-    private function typ($className)
+    protected function typ($className)
     {
         // strip prefixes and repeating garbage from name
         $className = preg_replace("/^(.+\\\)?(.+)(Bundle\\\Entity)/", "$2", $className);
@@ -416,7 +416,7 @@ class AuditSubscriber implements EventSubscriber
         }, explode('\\', $className)));
     }
 
-    private function label(EntityManager $em, $entity)
+    protected function label(EntityManager $em, $entity)
     {
         if (is_callable($this->labeler)) {
             return call_user_func($this->labeler, $entity);
@@ -436,7 +436,7 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function value(EntityManager $em, Type $type, $value)
+    protected function value(EntityManager $em, Type $type, $value)
     {
         $platform = $em->getConnection()->getDatabasePlatform();
         switch ($type->getName()) {

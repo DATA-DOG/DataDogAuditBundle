@@ -381,7 +381,7 @@ class AuditSubscriber implements EventSubscriber
                 ];
             }
         }
-        return $diff;
+        return json_encode($diff);
     }
 
     protected function assoc(EntityManager $em, $association = null)

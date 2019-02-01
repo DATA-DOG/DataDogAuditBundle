@@ -256,10 +256,10 @@ class AuditSubscriber implements EventSubscriber
 
     protected function insert(EntityManager $em, $entity, array $ch)
     {
-	    $diff = $this->diff($em, $entity, $ch);
-	    if (empty($diff)) {
-		    return; // if there is no entity diff, do not log it
-	    }
+        $diff = $this->diff($em, $entity, $ch);
+        if (empty($diff)) {
+            return; // if there is no entity diff, do not log it
+        }
         $meta = $em->getClassMetadata(get_class($entity));
         $this->audit($em, [
             'action' => 'insert',

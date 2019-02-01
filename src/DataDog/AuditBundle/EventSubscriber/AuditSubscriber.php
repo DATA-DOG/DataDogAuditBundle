@@ -256,13 +256,17 @@ class AuditSubscriber implements EventSubscriber
 
     protected function insert(EntityManager $em, $entity, array $ch)
     {
+        $diff = $this->diff($em, $entity, $ch);
+        if (empty($diff)) {
+            return; // if there is no entity diff, do not log it
+        }
         $meta = $em->getClassMetadata(get_class($entity));
         $this->audit($em, [
             'action' => 'insert',
             'source' => $this->assoc($em, $entity),
             'target' => null,
             'blame' => $this->blame($em),
-            'diff' => $this->diff($em, $entity, $ch),
+            'diff' => json_encode($diff),
             'tbl' => $meta->table['name'],
         ]);
     }
@@ -270,7 +274,7 @@ class AuditSubscriber implements EventSubscriber
     protected function update(EntityManager $em, $entity, array $ch)
     {
         $diff = $this->diff($em, $entity, $ch);
-        if (!$diff) {
+        if (empty($diff)) {
             return; // if there is no entity diff, do not log it
         }
         $meta = $em->getClassMetadata(get_class($entity));
@@ -279,7 +283,7 @@ class AuditSubscriber implements EventSubscriber
             'source' => $this->assoc($em, $entity),
             'target' => null,
             'blame' => $this->blame($em),
-            'diff' => $diff,
+            'diff' => json_encode($diff),
             'tbl' => $meta->table['name'],
         ]);
     }
@@ -381,7 +385,7 @@ class AuditSubscriber implements EventSubscriber
                 ];
             }
         }
-        return json_encode($diff);
+        return $diff;
     }
 
     protected function assoc(EntityManager $em, $association = null)

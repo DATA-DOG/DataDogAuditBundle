@@ -7,6 +7,8 @@ use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Entity\Association;
 
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Logging\LoggerChain;
@@ -33,6 +35,8 @@ class AuditSubscriber implements EventSubscriber
 
     protected $auditedEntities = [];
     protected $unauditedEntities = [];
+
+    protected $blameImpersonator = false;
 
     protected $inserted = []; // [$source, $changeset]
     protected $updated = []; // [$source, $changeset]
@@ -76,6 +80,12 @@ class AuditSubscriber implements EventSubscriber
         foreach ($unauditedEntities as $unauditedEntity) {
             $this->unauditedEntities[$unauditedEntity] = true;
         }
+    }
+
+    public function setBlameImpersonator($blameImpersonator)
+    {
+        // blame impersonator user instead of logged user (where applicable)
+        $this->blameImpersonator = $blameImpersonator;
     }
 
     public function getUnauditedEntities()
@@ -457,8 +467,28 @@ class AuditSubscriber implements EventSubscriber
             return $this->assoc($em, $this->blameUser);
         }
         $token = $this->securityTokenStorage->getToken();
+        $impersonatorUser = $this->getImpersonatorUserFromSecurityToken($token);
+        if ($impersonatorUser instanceof UserInterface) {
+            return $this->assoc($em, $impersonatorUser);
+        }
         if ($token && $token->getUser() instanceof UserInterface && \method_exists($token->getUser(), 'getId')) {
             return $this->assoc($em, $token->getUser());
+        }
+        return null;
+    }
+
+    private function getImpersonatorUserFromSecurityToken($token)
+    {
+        if (false === $this->blameImpersonator) {
+            return null;
+        }
+        if(!$token instanceof TokenInterface) {
+            return null;
+        }
+        foreach ($token->getRoles() as $role) {
+            if ($role instanceof SwitchUserRole) {
+                return $role->getSource()->getUser();
+            }
         }
         return null;
     }

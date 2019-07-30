@@ -42,8 +42,8 @@ class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-            ->booleanNode('blame_impersonator')
-            ->defaultFalse()
+                ->booleanNode('blame_impersonator')
+                ->defaultFalse()
             ->end()
         ;
 

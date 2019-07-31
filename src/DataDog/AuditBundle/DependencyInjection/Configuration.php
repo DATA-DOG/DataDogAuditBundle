@@ -40,6 +40,13 @@ class Configuration implements ConfigurationInterface
             ->end()
         ;
 
+        $rootNode
+            ->children()
+                ->booleanNode('blame_impersonator')
+                ->defaultFalse()
+            ->end()
+        ;
+
         return $treeBuilder;
     }
 

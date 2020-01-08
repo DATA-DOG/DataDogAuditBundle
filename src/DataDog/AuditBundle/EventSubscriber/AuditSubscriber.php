@@ -404,7 +404,7 @@ class AuditSubscriber implements EventSubscriber
             return null;
         }
 
-        $meta = get_class($association);
+        $meta = $em->getClassMetadata(get_class($association))->getName();
         $res = ['class' => $meta, 'typ' => $this->typ($meta), 'tbl' => null, 'label' => null];
 
         try {

@@ -268,7 +268,7 @@ class AuditSubscriber implements EventSubscriber
         if ($token) {
             $meta = $em->getClassMetadata(get_class($entity));
             $this->audit($em, [
-                'project' => $token->getUser()->getProject()->getId(),
+                'project' => is_object($token->getUser()) ? $token->getUser()->getProject()->getId() : $entity->getProject()->getId(),
                 'action' => 'insert',
                 'source' => $this->assoc($em, $entity),
                 'target' => null,
@@ -289,7 +289,7 @@ class AuditSubscriber implements EventSubscriber
         $meta = $em->getClassMetadata(get_class($entity));
         if ($token) {
             $this->audit($em, [
-                'project' => $token->getUser()->getProject()->getId(),
+                'project' => is_object($token->getUser()) ? $token->getUser()->getProject()->getId() : $entity->getProject()->getId(),
                 'action' => 'update',
                 'source' => $this->assoc($em, $entity),
                 'target' => null,
@@ -307,7 +307,7 @@ class AuditSubscriber implements EventSubscriber
             $meta = $em->getClassMetadata(get_class($entity));
             $source = array_merge($this->assoc($em, $entity), ['fk' => $id]);
             $this->audit($em, [
-                'project' => $token->getUser()->getProject()->getId(),
+                'project' => is_object($token->getUser()) ? $token->getUser()->getProject()->getId() : $entity->getProject()->getId(),
                 'action' => 'remove',
                 'source' => $source,
                 'target' => null,

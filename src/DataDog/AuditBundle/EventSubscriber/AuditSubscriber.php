@@ -452,6 +452,16 @@ class AuditSubscriber implements EventSubscriber
 
     protected function value(EntityManager $em, Type $type, $value)
     {
+        // json_encode will error when trying to encode a resource
+        if (is_resource($value)) {
+            // https://stackoverflow.com/questions/26303513/getting-blob-type-doctrine-entity-property-returns-data-only-once/26306571
+            if (0 !== ftell($value)) {
+                rewind($value);
+            }
+
+            $value = stream_get_contents($value);
+        }
+
         $platform = $em->getConnection()->getDatabasePlatform();
         switch ($type->getName()) {
         case Type::BOOLEAN:

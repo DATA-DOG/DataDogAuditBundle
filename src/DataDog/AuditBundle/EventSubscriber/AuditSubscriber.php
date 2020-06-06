@@ -38,6 +38,8 @@ class AuditSubscriber implements EventSubscriber
 
     protected $blameImpersonator = false;
 
+    protected $compositeKeys = false;
+
     protected $inserted = []; // [$source, $changeset]
     protected $updated = []; // [$source, $changeset]
     protected $removed = []; // [$source, $id]
@@ -86,6 +88,12 @@ class AuditSubscriber implements EventSubscriber
     {
         // blame impersonator user instead of logged user (where applicable)
         $this->blameImpersonator = $blameImpersonator;
+    }
+
+    public function setCompositeKeys($compositeKeys)
+    {
+        // store association foreign keys as an associative array allowing composite keys
+        $this->compositeKeys = $compositeKeys;
     }
 
     public function getUnauditedEntities()
@@ -362,13 +370,21 @@ class AuditSubscriber implements EventSubscriber
     protected function id(EntityManager $em, $entity)
     {
         $meta = $em->getClassMetadata(get_class($entity));
-        $pk = $meta->getSingleIdentifierFieldName();
-        $pk = $this->value(
-            $em,
-            Type::getType($meta->fieldMappings[$pk]['type']),
-            $meta->getReflectionProperty($pk)->getValue($entity)
-        );
-        return $pk;
+        if ($this->compositeKeys) {
+            $pk = $meta->getIdentifierValues($entity);
+            return json_encode($pk);
+        } else {
+            if ($meta->isIdentifierComposite) {
+                throw new \Exception("Identifier of " . $meta->getName() . " is composite. Consider setting datadog_audit.composite_keys to true.");
+            }
+            $pk = $meta->getSingleIdentifierFieldName();
+            $pk = $this->value(
+                $em,
+                Type::getType($meta->fieldMappings[$pk]['type']),
+                $meta->getReflectionProperty($pk)->getValue($entity)
+            );
+            return $pk;
+        }
     }
 
     protected function diff(EntityManager $em, $entity, array $ch)
@@ -386,7 +402,11 @@ class AuditSubscriber implements EventSubscriber
                 ];
             } elseif ($meta->hasAssociation($fieldName) && $meta->isSingleValuedAssociation($fieldName)) {
                 $mapping = $meta->associationMappings[$fieldName];
-                $colName = $meta->getSingleAssociationJoinColumnName($fieldName);
+                if ($meta->isAssociationWithSingleJoinColumn($fieldName)) {
+                    $colName = $meta->getSingleAssociationJoinColumnName($fieldName);
+                } else {
+                    $colName = $fieldName;
+                }
                 $assocMeta = $em->getClassMetadata($mapping['targetEntity']);
                 $diff[$fieldName] = [
                     'old' => $this->assoc($em, $old),
@@ -407,15 +427,11 @@ class AuditSubscriber implements EventSubscriber
         $meta = $em->getClassMetadata(get_class($association))->getName();
         $res = ['class' => $meta, 'typ' => $this->typ($meta), 'tbl' => null, 'label' => null];
 
-        try {
-            $meta = $em->getClassMetadata($meta);
-            $res['tbl'] = $meta->table['name'];
-            $em->getUnitOfWork()->initializeObject($association); // ensure that proxies are initialized
-            $res['fk'] = (string)$this->id($em, $association);
-            $res['label'] = $this->label($em, $association);
-        } catch (\Exception $e) {
-            $res['fk'] = (string) $association->getId();
-        }
+        $meta = $em->getClassMetadata($meta);
+        $res['tbl'] = $meta->table['name'];
+        $em->getUnitOfWork()->initializeObject($association); // ensure that proxies are initialized
+        $res['fk'] = (string)$this->id($em, $association);
+        $res['label'] = $this->label($em, $association);
 
         return $res;
     }

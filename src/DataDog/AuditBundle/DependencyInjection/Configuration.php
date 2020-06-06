@@ -48,6 +48,14 @@ class Configuration implements ConfigurationInterface
             ->end()
         ;
 
+        $rootNode
+            ->children()
+                ->booleanNode('composite_keys')
+                    ->defaultFalse()
+                    ->info('Store association foreign keys as an associative array allowing composite keys.')
+            ->end()
+        ;
+
         return $treeBuilder;
     }
 

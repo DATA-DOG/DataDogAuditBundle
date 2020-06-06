@@ -31,5 +31,9 @@ class DataDogAuditExtension extends Extension
         if (isset($config['blame_impersonator'])) {
             $auditSubscriber->addMethodCall('setBlameImpersonator', array($config['blame_impersonator']));
         }
+        
+        if (isset($config['composite_keys'])) {
+            $auditSubscriber->addMethodCall('setCompositeKeys', array($config['composite_keys']));
+        }
     }
 }

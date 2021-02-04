@@ -495,12 +495,26 @@ class AuditSubscriber implements EventSubscriber
         if(!$token instanceof TokenInterface) {
             return null;
         }
-        foreach ($token->getRoles() as $role) {
+
+        foreach ($this->getRoles($token) as $role) {
             if ($role instanceof SwitchUserRole) {
                 return $role->getSource()->getUser();
             }
         }
         return null;
+    }
+
+    /**
+     * @param TokenInterface $token
+     * @return array
+     */
+    private function getRoles(TokenInterface $token)
+    {
+        if(method_exists($token, 'getRoleNames')){
+            return $token->getRoleNames();
+        }
+
+        return $token->getRoles();
     }
 
     public function getSubscribedEvents()

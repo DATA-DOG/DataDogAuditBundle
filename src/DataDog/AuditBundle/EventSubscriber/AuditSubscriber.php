@@ -68,10 +68,7 @@ class AuditSubscriber implements EventSubscriber
 
     public function addAuditedEntities(array $auditedEntities)
     {
-        // use entity names as array keys for easier lookup
-        foreach ($auditedEntities as $auditedEntity) {
-            $this->auditedEntities[$auditedEntity] = true;
-        }
+        $this->auditedEntities = $auditedEntities;
     }
 
     public function addUnauditedEntities(array $unauditedEntities)
@@ -115,6 +112,21 @@ class AuditSubscriber implements EventSubscriber
         }
 
         return $isEntityUnaudited;
+    }
+
+    protected function isPropertyUnaudited($entity, $property)
+    {
+        $entityName = get_class($entity);
+        $isPropertyUnaudited = FALSE;
+        if (!array_key_exists($entityName, $this->auditedEntities)) {
+            return $isPropertyUnaudited;
+        }
+        if (in_array($property, $this->auditedEntities[$entityName]['audited_properties'])) {
+            $isPropertyUnaudited = FALSE;
+        } else if (in_array($property, $this->auditedEntities[$entityName]['unaudited_properties'])) {
+            $isPropertyUnaudited = TRUE;
+        }
+        return $isPropertyUnaudited;
     }
 
     public function onFlush(OnFlushEventArgs $args)
@@ -377,6 +389,9 @@ class AuditSubscriber implements EventSubscriber
         $meta = $em->getClassMetadata(get_class($entity));
         $diff = [];
         foreach ($ch as $fieldName => list($old, $new)) {
+            if ($this->isPropertyUnaudited($entity, $fieldName)) {
+                continue;
+            }
             if ($meta->hasField($fieldName) && !array_key_exists($fieldName, $meta->embeddedClasses)) {
                 $mapping = $meta->fieldMappings[$fieldName];
                 $diff[$fieldName] = [

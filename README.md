@@ -76,7 +76,20 @@ Sometimes, it is also possible, that you want to create audit log entries only f
 
     data_dog_audit:
         audited_entities:
-            - AppBundle\Entity\AuditForThis
+            AppBundle\Entity\FirstAuditForThis:
+            AppBundle\Entity\SecondAuditForThis:
+                audited_properties:
+                    - firstAuditedProperty
+                    - secondAuditedProperty
+                unaudited_properties:
+                    - firstUnauditedProperty
+                    - secondUnauditedProperty
+            AppBundle\Entity\ThirdAuditForThis:
+                audited_properties:
+                    - auditedProperty
+            AppBundle\Entity\FourthAuditForThis:
+                unaudited_properties:
+                    - unauditedProperty
 
 You can specify either audited or unaudited entities. If both are specified, only audited entities would be taken into account.
 

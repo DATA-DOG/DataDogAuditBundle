@@ -17,8 +17,9 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder()
     {
-        $treeBuilder = new TreeBuilder();
-        $rootNode = $treeBuilder->root('data_dog_audit');
+        $treeBuilder = new TreeBuilder('data_dog_audit');
+        // BC layer for symfony/config < 4.2
+        $rootNode = method_exists($treeBuilder, 'getRootNode') ? $treeBuilder->getRootNode() : $treeBuilder->root('data_dog_audit');
 
         $rootNode
             ->children()
@@ -37,6 +38,13 @@ class Configuration implements ConfigurationInterface
                     ->performNoDeepMerging()
                     ->prototype('scalar')->end()
                 ->end()
+            ->end()
+        ;
+
+        $rootNode
+            ->children()
+                ->booleanNode('blame_impersonator')
+                ->defaultFalse()
             ->end()
         ;
 

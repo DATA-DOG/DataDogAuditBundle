@@ -80,6 +80,15 @@ Sometimes, it is also possible, that you want to create audit log entries only f
 
 You can specify either audited or unaudited entities. If both are specified, only audited entities would be taken into account.
 
+### Impersonation 
+
+Sometimes, you might also want to blame the `impersonator` user instead of the `impersonated` one. You can archive this by adding the `blame_impersonator` configuration key in your `config.yml`, for example:
+
+    data_dog_audit:
+        blame_impersonator: true
+        
+The default behavior is to blame the logged-in user, so it will ignore the `impersonator` when not explicitly declared.
+
 ## Screenshots
 
 All paginated audit log:

@@ -6,7 +6,9 @@ use DataDog\AuditBundle\DBAL\AuditLogger;
 use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Entity\Association;
 
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Logging\LoggerChain;
@@ -24,29 +26,31 @@ class AuditSubscriber implements EventSubscriber
     /**
      * @var SQLLogger
      */
-    private $old;
+    protected $old;
 
     /**
-     * @var TokenStorage
+     * @var TokenStorageInterface
      */
     protected $securityTokenStorage;
 
-    private $auditedEntities = [];
-    private $unauditedEntities = [];
+    protected $auditedEntities = [];
+    protected $unauditedEntities = [];
 
-    private $inserted = []; // [$source, $changeset]
-    private $updated = []; // [$source, $changeset]
-    private $removed = []; // [$source, $id]
-    private $associated = [];   // [$source, $target, $mapping]
-    private $dissociated = []; // [$source, $target, $id, $mapping]
+    protected $blameImpersonator = false;
 
-    private $assocInsertStmt;
-    private $auditInsertStmt;
+    protected $inserted = []; // [$source, $changeset]
+    protected $updated = []; // [$source, $changeset]
+    protected $removed = []; // [$source, $id]
+    protected $associated = [];   // [$source, $target, $mapping]
+    protected $dissociated = []; // [$source, $target, $id, $mapping]
+
+    protected $assocInsertStmt;
+    protected $auditInsertStmt;
 
     /** @var UserInterface */
-    private $blameUser;
+    protected $blameUser;
 
-    public function __construct(TokenStorage $securityTokenStorage)
+    public function __construct(TokenStorageInterface $securityTokenStorage)
     {
         $this->securityTokenStorage = $securityTokenStorage;
     }
@@ -78,12 +82,18 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
+    public function setBlameImpersonator($blameImpersonator)
+    {
+        // blame impersonator user instead of logged user (where applicable)
+        $this->blameImpersonator = $blameImpersonator;
+    }
+
     public function getUnauditedEntities()
     {
         return array_keys($this->unauditedEntities);
     }
 
-    private function isEntityUnaudited($entity)
+    protected function isEntityUnaudited($entity)
     {
         if (!empty($this->auditedEntities)) {
             // only selected entities are audited
@@ -180,7 +190,7 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function flush(EntityManager $em)
+    protected function flush(EntityManager $em)
     {
         $em->getConnection()->getConfiguration()->setSQLLogger($this->old);
         $uow = $em->getUnitOfWork();
@@ -230,7 +240,7 @@ class AuditSubscriber implements EventSubscriber
         $this->dissociated = [];
     }
 
-    private function associate(EntityManager $em, $source, $target, array $mapping)
+    protected function associate(EntityManager $em, $source, $target, array $mapping)
     {
       $token = $this->securityTokenStorage->getToken();
         if ($token) {
@@ -246,7 +256,7 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
+    protected function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
     {
         $token = $this->securityTokenStorage->getToken();
         if ($token) {
@@ -262,8 +272,12 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function insert(EntityManager $em, $entity, array $ch)
+    protected function insert(EntityManager $em, $entity, array $ch)
     {
+        $diff = $this->diff($em, $entity, $ch);
+        if (empty($diff)) {
+            return; // if there is no entity diff, do not log it
+        }
         $token = $this->securityTokenStorage->getToken();
         if ($token) {
             $meta = $em->getClassMetadata(get_class($entity));
@@ -273,16 +287,16 @@ class AuditSubscriber implements EventSubscriber
                 'source' => $this->assoc($em, $entity),
                 'target' => null,
                 'blame' => $this->blame($em),
-                'diff' => $this->diff($em, $entity, $ch),
+                'diff' => $diff,
                 'tbl' => $meta->table['name'],
             ]);
         }
     }
 
-    private function update(EntityManager $em, $entity, array $ch)
+    protected function update(EntityManager $em, $entity, array $ch)
     {
         $diff = $this->diff($em, $entity, $ch);
-        if (!$diff) {
+        if (empty($diff)) {
             return; // if there is no entity diff, do not log it
         }
         $token = $this->securityTokenStorage->getToken();
@@ -300,7 +314,7 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function remove(EntityManager $em, $entity, $id)
+    protected function remove(EntityManager $em, $entity, $id)
     {
         $token = $this->securityTokenStorage->getToken();
         if ($token) {
@@ -318,7 +332,7 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function audit(EntityManager $em, array $data)
+    protected function audit(EntityManager $em, array $data)
     {
         $c = $em->getConnection();
         $p = $c->getDatabasePlatform();
@@ -365,7 +379,7 @@ class AuditSubscriber implements EventSubscriber
         $this->auditInsertStmt->execute();
     }
 
-    private function id(EntityManager $em, $entity)
+    protected function id(EntityManager $em, $entity)
     {
         $meta = $em->getClassMetadata(get_class($entity));
         $pk = $meta->getSingleIdentifierFieldName();
@@ -377,13 +391,13 @@ class AuditSubscriber implements EventSubscriber
         return $pk;
     }
 
-    private function diff(EntityManager $em, $entity, array $ch)
+    protected function diff(EntityManager $em, $entity, array $ch)
     {
         $uow = $em->getUnitOfWork();
         $meta = $em->getClassMetadata(get_class($entity));
         $diff = [];
         foreach ($ch as $fieldName => list($old, $new)) {
-            if ($meta->hasField($fieldName)) {
+            if ($meta->hasField($fieldName) && !array_key_exists($fieldName, $meta->embeddedClasses)) {
                 $mapping = $meta->fieldMappings[$fieldName];
                 $diff[$fieldName] = [
                     'old' => $this->value($em, Type::getType($mapping['type']), $old),
@@ -404,20 +418,29 @@ class AuditSubscriber implements EventSubscriber
         return $diff;
     }
 
-    private function assoc(EntityManager $em, $association = null)
+    protected function assoc(EntityManager $em, $association = null)
     {
         if (null === $association) {
             return null;
         }
-        $meta = $em->getClassMetadata(get_class($association));
-        $res = ['class' => $meta->name, 'typ' => $this->typ($meta->name), 'tbl' => $meta->table['name']];
-        $em->getUnitOfWork()->initializeObject($association); // ensure that proxies are initialized
-        $res['fk'] = (string)$this->id($em, $association);
-        $res['label'] = $this->label($em, $association);
+
+        $meta = $em->getClassMetadata(get_class($association))->getName();
+        $res = ['class' => $meta, 'typ' => $this->typ($meta), 'tbl' => null, 'label' => null];
+
+        try {
+            $meta = $em->getClassMetadata($meta);
+            $res['tbl'] = $meta->table['name'];
+            $em->getUnitOfWork()->initializeObject($association); // ensure that proxies are initialized
+            $res['fk'] = (string)$this->id($em, $association);
+            $res['label'] = $this->label($em, $association);
+        } catch (\Exception $e) {
+            $res['fk'] = (string) $association->getId();
+        }
+
         return $res;
     }
 
-    private function typ($className)
+    protected function typ($className)
     {
         // strip prefixes and repeating garbage from name
         $className = preg_replace("/^(.+\\\)?(.+)(Bundle\\\Entity)/", "$2", $className);
@@ -427,7 +450,7 @@ class AuditSubscriber implements EventSubscriber
         }, explode('\\', $className)));
     }
 
-    private function label(EntityManager $em, $entity)
+    protected function label(EntityManager $em, $entity)
     {
         if (is_callable($this->labeler)) {
             return call_user_func($this->labeler, $entity);
@@ -460,8 +483,18 @@ class AuditSubscriber implements EventSubscriber
         }
     }
 
-    private function value(EntityManager $em, Type $type, $value)
+    protected function value(EntityManager $em, Type $type, $value)
     {
+        // json_encode will error when trying to encode a resource
+        if (is_resource($value)) {
+            // https://stackoverflow.com/questions/26303513/getting-blob-type-doctrine-entity-property-returns-data-only-once/26306571
+            if (0 !== ftell($value)) {
+                rewind($value);
+            }
+
+            $value = stream_get_contents($value);
+        }
+
         $platform = $em->getConnection()->getDatabasePlatform();
         switch ($type->getName()) {
         case Type::BOOLEAN:
@@ -473,14 +506,48 @@ class AuditSubscriber implements EventSubscriber
 
     protected function blame(EntityManager $em)
     {
-        if ($this->blameUser instanceof UserInterface) {
+        if ($this->blameUser instanceof UserInterface && \method_exists($this->blameUser, 'getId')) {
             return $this->assoc($em, $this->blameUser);
         }
         $token = $this->securityTokenStorage->getToken();
-        if ($token && $token->getUser() instanceof UserInterface) {
+        $impersonatorUser = $this->getImpersonatorUserFromSecurityToken($token);
+        if ($impersonatorUser instanceof UserInterface) {
+            return $this->assoc($em, $impersonatorUser);
+        }
+        if ($token && $token->getUser() instanceof UserInterface && \method_exists($token->getUser(), 'getId')) {
             return $this->assoc($em, $token->getUser());
         }
         return null;
+    }
+
+    private function getImpersonatorUserFromSecurityToken($token)
+    {
+        if (false === $this->blameImpersonator) {
+            return null;
+        }
+        if(!$token instanceof TokenInterface) {
+            return null;
+        }
+
+        foreach ($this->getRoles($token) as $role) {
+            if ($role instanceof SwitchUserRole) {
+                return $role->getSource()->getUser();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @param TokenInterface $token
+     * @return array
+     */
+    private function getRoles(TokenInterface $token)
+    {
+        if(method_exists($token, 'getRoleNames')){
+            return $token->getRoleNames();
+        }
+
+        return $token->getRoles();
     }
 
     public function getSubscribedEvents()

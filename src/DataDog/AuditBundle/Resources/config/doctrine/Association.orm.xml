@@ -10,7 +10,7 @@
     </id>
 
     <field name="typ" length="128" />
-    <field name="tbl" length="128" />
+    <field name="tbl" length="128" nullable="true" />
     <field name="label" nullable="true" />
     <field name="fk" />
     <field name="class" />

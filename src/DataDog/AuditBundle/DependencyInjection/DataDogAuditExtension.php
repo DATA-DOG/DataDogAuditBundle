@@ -27,5 +27,9 @@ class DataDogAuditExtension extends Extension
         } else if (isset($config['unaudited_entities'])) {
             $auditSubscriber->addMethodCall('addUnauditedEntities', array($config['unaudited_entities']));
         }
+
+        if (isset($config['blame_impersonator'])) {
+            $auditSubscriber->addMethodCall('setBlameImpersonator', array($config['blame_impersonator']));
+        }
     }
 }

@@ -11,7 +11,7 @@
 
     <field name="action" length="12" />
     <field name="tbl" length="128" />
-    <field name="diff" type="json_array" nullable="true" />
+    <field name="diff" type="json" nullable="true" />
     <field name="loggedAt" type="datetime" />
 
     <one-to-one field="source" target-entity="Association">

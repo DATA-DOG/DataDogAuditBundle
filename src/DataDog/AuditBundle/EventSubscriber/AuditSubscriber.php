@@ -6,6 +6,7 @@ use DataDog\AuditBundle\DBAL\AuditLogger;
 use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Entity\Association;
 
+use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
@@ -348,7 +349,7 @@ class AuditSubscriber implements EventSubscriber
             if (isset($meta->fieldMappings[$name]['type'])) {
                 $typ = $meta->fieldMappings[$name]['type'];
             } else {
-                $typ = Type::getType(Type::BIGINT); // relation
+                $typ = Type::getType(Types::BIGINT); // relation
             }
             // @TODO: this check may not be necessary, simply it ensures that empty values are nulled
             if (in_array($name, ['source', 'target', 'blame']) && $data[$name] === false) {
@@ -464,7 +465,7 @@ class AuditSubscriber implements EventSubscriber
 
         $platform = $em->getConnection()->getDatabasePlatform();
         switch ($type->getName()) {
-        case Type::BOOLEAN:
+        case Types::BOOLEAN:
             return $type->convertToPHPValue($value, $platform); // json supports boolean values
         default:
             return $type->convertToDatabaseValue($value, $platform);

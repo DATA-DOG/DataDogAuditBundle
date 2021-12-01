@@ -124,13 +124,15 @@ class AuditSubscriber implements EventSubscriber
 
         // extend the sql logger
         $this->old = $em->getConnection()->getConfiguration()->getSQLLogger();
-        $new = new LoggerChain();
-        $new->addLogger(new AuditLogger(function () use($em) {
-            $this->flush($em);
-        }));
+        $loggers = [
+            new AuditLogger(function () use($em) {
+                $this->flush($em);
+            }),
+        ];
         if ($this->old instanceof SQLLogger) {
-            $new->addLogger($this->old);
+            $loggers[] = $this->old;
         }
+        $new = new LoggerChain($loggers);
         $em->getConnection()->getConfiguration()->setSQLLogger($new);
 
         foreach ($uow->getScheduledEntityUpdates() as $entity) {

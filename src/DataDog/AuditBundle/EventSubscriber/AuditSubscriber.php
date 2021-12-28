@@ -11,6 +11,7 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\DBAL\Logging\LoggerChain;
 use Doctrine\DBAL\Logging\SQLLogger;
 use Doctrine\Common\EventSubscriber;
@@ -122,15 +123,20 @@ class AuditSubscriber implements EventSubscriber
         $em = $args->getEntityManager();
         $uow = $em->getUnitOfWork();
 
+        $loggers = [
+            new AuditLogger(function () use($em) {
+                $this->flush($em);
+            })
+        ];
+
         // extend the sql logger
         $this->old = $em->getConnection()->getConfiguration()->getSQLLogger();
-        $new = new LoggerChain();
-        $new->addLogger(new AuditLogger(function () use($em) {
-            $this->flush($em);
-        }));
+
         if ($this->old instanceof SQLLogger) {
-            $new->addLogger($this->old);
+            $loggers[] = $this->old;
         }
+
+        $new = new LoggerChain($loggers);
         $em->getConnection()->getConfiguration()->setSQLLogger($new);
 
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
@@ -348,7 +354,7 @@ class AuditSubscriber implements EventSubscriber
             if (isset($meta->fieldMappings[$name]['type'])) {
                 $typ = $meta->fieldMappings[$name]['type'];
             } else {
-                $typ = Type::getType(Type::BIGINT); // relation
+                $typ = Type::getType(Types::BIGINT); // relation
             }
             // @TODO: this check may not be necessary, simply it ensures that empty values are nulled
             if (in_array($name, ['source', 'target', 'blame']) && $data[$name] === false) {
@@ -464,7 +470,7 @@ class AuditSubscriber implements EventSubscriber
 
         $platform = $em->getConnection()->getDatabasePlatform();
         switch ($type->getName()) {
-        case Type::BOOLEAN:
+        case Types::BOOLEAN:
             return $type->convertToPHPValue($value, $platform); // json supports boolean values
         default:
             return $type->convertToDatabaseValue($value, $platform);

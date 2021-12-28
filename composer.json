@@ -3,59 +3,48 @@
   "type": "symfony-bundle",
   "description": "Audit bundle for symfony2 and doctrine orm, logs any database change",
   "keywords": ["audit", "log", "symfony2", "bundle", "doctrine", "orm"],
-  "homepage": "http://github.com/DATA-DOG/DataDogAuditBundle",
+  "homepage": "https://github.com/DATA-DOG/DataDogAuditBundle",
   "license": "MIT",
-
   "authors": [
     {
       "name": "DataDog Team",
-      "homepage": "http://datadog.lt"
+      "homepage": "https://datadog.lt"
     },
     {
       "name": "Symfony2 Community",
-      "homepage": "http://github.com/DATA-DOG/DataDogAuditBundle/contributors"
+      "homepage": "https://github.com/DATA-DOG/DataDogAuditBundle/contributors"
     }
   ],
-
   "require": {
-    "php": ">=5.4.0",
-    "symfony/framework-bundle": "^2.6|^3.0|^4.0|^5.0",
-    "doctrine/orm": "^2.4"
+    "php": ">=7.4",
+    "doctrine/dbal": "^3.1.4",
+    "doctrine/orm": "^2.6",
+    "symfony/framework-bundle": "^4.4|^5.4|^6.0"
   },
-
   "require-dev": {
-    "php": ">=5.6.0",
     "ext-pdo": "*",
     "ext-pdo_sqlite": "*",
-
-    "symfony/symfony": "^3.0|^4.0|^5.0",
-    "doctrine/orm": "^2.5",
-    "doctrine/doctrine-bundle": "^1.6",
-    "doctrine/doctrine-fixtures-bundle": "^2.2",
-    "sensio/framework-extra-bundle": "^3.0.2",
+    "data-dog/pager-bundle": "^0.2",
+    "doctrine/doctrine-bundle": "^2.5",
+    "doctrine/doctrine-fixtures-bundle": "^3.4",
     "knplabs/knp-menu-bundle": "^2.0",
     "knplabs/knp-time-bundle": "^1.3",
-    "data-dog/pager-bundle": "^0.2",
-
-    "phpunit/phpunit": "~4.7.0"
+    "sensio/framework-extra-bundle": "^5.6",
+    "symfony/symfony": "^4.4|^5.4|^6.0"
   },
-
   "autoload": {
     "psr-4": {
       "DataDog\\AuditBundle\\": "src/DataDog/AuditBundle"
     }
   },
-
   "autoload-dev": {
     "psr-4": {
       "": "example/src/"
     }
   },
-
   "archive": {
     "exclude": ["vendor", "tests", "*phpunit.xml", ".travis.yml", "example", "Makefile", "screenshots"]
   },
-
   "extra": {
     "branch-alias": {
       "dev-master": "0.1.x-dev"

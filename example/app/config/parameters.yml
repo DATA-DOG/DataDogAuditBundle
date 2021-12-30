@@ -1,9 +1,0 @@
-parameters:
-  database_host: 127.0.0.1
-  database_port: ~
-  database_name: datadog_audit
-  database_user: root
-  database_password: ~
-  database_path: "%kernel.root_dir%/pager.db3"
-
-  secret: ThisTokenIsNotSoSecretChangeIt

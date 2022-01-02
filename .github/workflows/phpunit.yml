@@ -1,0 +1,50 @@
+name: Tests
+
+on:
+    push:
+    pull_request:
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    test:
+        runs-on: ubuntu-20.04
+
+        strategy:
+            matrix:
+                php: ['7.4', '8.0', '8.1']
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
+
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: '${{ matrix.php }}'
+                    coverage: 'none'
+
+            -   name: Display versions
+                run: |
+                    php -r 'foreach (get_loaded_extensions() as $extension) echo $extension . " " . phpversion($extension) . PHP_EOL;'
+                    php -i
+
+            -   name: Validate composer.json
+                run: composer validate --strict
+
+            -   name: Cache Composer packages
+                id: composer-cache
+                uses: actions/cache@v2
+                with:
+                    path: vendor
+                    key: ${{ matrix.php }}-composer-${{ hashFiles('**/composer.lock') }}
+                    restore-keys: |
+                        ${{ matrix.php }}-composer-
+
+            -   name: Install dependencies
+                run: composer install --prefer-dist --no-progress
+
+            -   name: Run test suite
+                run: vendor/bin/phpunit --verbose

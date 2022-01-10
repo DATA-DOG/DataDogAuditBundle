@@ -8,6 +8,7 @@ use DataDog\AuditBundle\DataDogAuditBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Psr\Log\NullLogger;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
+use Symfony\Bundle\SecurityBundle\SecurityBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel;
@@ -25,6 +26,7 @@ class TestKernel extends Kernel
     {
         return [
             new FrameworkBundle(),
+            new SecurityBundle(),
             new DoctrineBundle(),
             new DataDogAuditBundle(),
         ];
@@ -34,6 +36,13 @@ class TestKernel extends Kernel
     {
         $loader->load(function (ContainerBuilder $container): void {
             $container->loadFromExtension('framework');
+            $container->loadFromExtension('security', [
+                'firewalls' => [
+                    'main' => [
+                        'security' => false,
+                    ],
+                ],
+            ]);
             $container->loadFromExtension('doctrine', [
                 'dbal' => ['driver' => 'pdo_sqlite'],
                 'orm' => [

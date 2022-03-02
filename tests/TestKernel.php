@@ -37,6 +37,7 @@ class TestKernel extends Kernel
         $loader->load(function (ContainerBuilder $container): void {
             $container->loadFromExtension('framework');
             $container->loadFromExtension('security', [
+                'enable_authenticator_manager' => true,
                 'firewalls' => [
                     'main' => [
                         'security' => false,
@@ -48,10 +49,6 @@ class TestKernel extends Kernel
                 'orm' => [
                     'auto_generate_proxy_classes' => true,
                     'mappings' => [
-                        'DataDogAuditBundle' => [
-                            'dir' => __DIR__.'/../src/DataDog/AuditBundle/Entity',
-                            'prefix' => 'DataDog\AuditBundle\Entity',
-                        ],
                         'DataDogAuditBundleFixtures' => [
                             'dir' => __DIR__.'/Entity',
                             'prefix' => 'DataDog\AuditBundle\Tests\Entity',

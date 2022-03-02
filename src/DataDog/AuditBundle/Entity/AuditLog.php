@@ -2,50 +2,8 @@
 
 namespace DataDog\AuditBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-/**
- * @ORM\Entity
- * @ORM\Table(name="audit_logs")
- */
 class AuditLog
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="bigint")
-     * @ORM\GeneratedValue(strategy="IDENTITY")
-     */
-
-    /**
-     * @ORM\Column(length=12)
-     */
-
-    /**
-     * @ORM\Column(length=128)
-     */
-
-    /**
-     * @ORM\OneToOne(targetEntity="Association")
-     * @ORM\JoinColumn(nullable=false)
-     */
-
-    /**
-     * @ORM\OneToOne(targetEntity="Association")
-     */
-
-    /**
-     * @ORM\OneToOne(targetEntity="Association")
-     */
-
-    /**
-     * @ORM\Column(type="json", nullable=true)
-     */
-
-    /**
-     * @ORM\Column(type="datetime")
-     */
-
-    public function getId()
     private ?int $id;
 
     private string $action;

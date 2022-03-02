@@ -48,7 +48,9 @@ class AuditSubscriber implements EventSubscriber
     protected $assocInsertStmt;
     protected $auditInsertStmt;
 
-    /** @var UserInterface */
+    /**
+     * @var UserInterface|null
+     */
     protected $blameUser;
 
     public function __construct(TokenStorageInterface $securityTokenStorage)

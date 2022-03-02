@@ -11,30 +11,21 @@ class Configuration implements ConfigurationInterface
     {
         // @formatter:off
         $treeBuilder = new TreeBuilder('data_dog_audit');
-        // BC layer for symfony/config < 4.2
-        $rootNode = method_exists($treeBuilder, 'getRootNode') ? $treeBuilder->getRootNode() : $treeBuilder->root('data_dog_audit');
-
-        $rootNode
+        $treeBuilder->getRootNode()
             ->children()
                 ->arrayNode('audited_entities')
                     ->canBeUnset()
                     ->performNoDeepMerging()
-                    ->prototype('scalar')->end()
+                    ->scalarPrototype()->end()
                 ->end()
             ->end()
-        ;
-
-        $rootNode
             ->children()
                 ->arrayNode('unaudited_entities')
                     ->canBeUnset()
                     ->performNoDeepMerging()
-                    ->prototype('scalar')->end()
+                    ->scalarPrototype()->end()
                 ->end()
             ->end()
-        ;
-
-        $rootNode
             ->children()
                 ->booleanNode('blame_impersonator')
                 ->defaultFalse()

@@ -31,7 +31,7 @@
     },
     "autoload": {
         "psr-4": {
-            "DataDog\\AuditBundle\\": "src/DataDog/AuditBundle"
+            "DataDog\\AuditBundle\\": "src"
         }
     },
     "autoload-dev": {

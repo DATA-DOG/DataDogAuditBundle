@@ -15,80 +15,89 @@ class AuditLog
      * @ORM\Column(type="bigint")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
-    private $id;
 
     /**
      * @ORM\Column(length=12)
      */
-    private $action;
 
     /**
      * @ORM\Column(length=128)
      */
-    private $tbl;
 
     /**
      * @ORM\OneToOne(targetEntity="Association")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $source;
 
     /**
      * @ORM\OneToOne(targetEntity="Association")
      */
-    private $target;
 
     /**
      * @ORM\OneToOne(targetEntity="Association")
      */
-    private $blame;
 
     /**
      * @ORM\Column(type="json", nullable=true)
      */
-    private $diff;
 
     /**
      * @ORM\Column(type="datetime")
      */
-    private $loggedAt;
 
     public function getId()
+    private ?int $id;
+
+    private string $action;
+
+    private string $tbl;
+
+    private Association $source;
+
+    private ?Association $target;
+
+    private ?Association $blame;
+
+    private ?array $diff;
+
+    private \DateTimeInterface $loggedAt;
+
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getAction()
+    public function getAction(): string
     {
         return $this->action;
     }
 
-    public function getTbl()
+    public function getTbl(): string
     {
         return $this->tbl;
     }
 
-    public function getSource()
+    public function getSource(): Association
     {
         return $this->source;
     }
 
-    public function getTarget()
+    public function getTarget(): ?Association
     {
         return $this->target;
     }
 
-    public function getBlame()
+    public function getBlame(): ?Association
     {
         return $this->blame;
     }
 
-    public function getDiff()
+    public function getDiff(): ?array
     {
         return $this->diff;
     }
 
-    public function getLoggedAt()
+    public function getLoggedAt(): \DateTimeInterface
     {
         return $this->loggedAt;
     }

@@ -16,21 +16,15 @@ class AuditLogger implements SQLLogger
         $this->flusher = $flusher;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function startQuery($sql, array $params = null, array $types = null)
+    public function startQuery($sql, ?array $params = null, ?array $types = null): void
     {
         // right before commit insert all audit entries
         if ($sql === '"COMMIT"') {
-            call_user_func($this->flusher);
+            \call_user_func($this->flusher);
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function stopQuery()
+    public function stopQuery(): void
     {
     }
 }

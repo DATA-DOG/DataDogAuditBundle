@@ -3,66 +3,68 @@
 namespace DataDog\AuditBundle\EventSubscriber;
 
 use DataDog\AuditBundle\DBAL\AuditLogger;
-use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Entity\Association;
-
+use DataDog\AuditBundle\Entity\AuditLog;
+use Doctrine\Common\EventSubscriber;
+use Doctrine\DBAL\Logging\LoggerChain;
+use Doctrine\DBAL\Logging\SQLLogger;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Events;
+use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Types\Types;
-use Doctrine\DBAL\Logging\LoggerChain;
-use Doctrine\DBAL\Logging\SQLLogger;
-use Doctrine\Common\EventSubscriber;
-use Doctrine\ORM\Events;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Event\OnFlushEventArgs;
 
 class AuditSubscriber implements EventSubscriber
 {
+    /**
+     * @var callable|null
+     */
     protected $labeler;
 
-    /**
-     * @var SQLLogger
-     */
-    protected $old;
-
-    /**
-     * @var TokenStorageInterface
-     */
-    protected $securityTokenStorage;
+    protected ?SQLLogger $old;
 
     protected $auditedEntities = [];
+
     protected $unauditedEntities = [];
 
     protected $blameImpersonator = false;
 
     protected $inserted = []; // [$source, $changeset]
+
     protected $updated = []; // [$source, $changeset]
+
     protected $removed = []; // [$source, $id]
+
     protected $associated = [];   // [$source, $target, $mapping]
+
     protected $dissociated = []; // [$source, $target, $id, $mapping]
 
     protected $assocInsertStmt;
+
     protected $auditInsertStmt;
 
-    /** @var UserInterface */
-    protected $blameUser;
+    protected ?UserInterface $blameUser = null;
+
+    protected TokenStorageInterface $securityTokenStorage;
 
     public function __construct(TokenStorageInterface $securityTokenStorage)
     {
         $this->securityTokenStorage = $securityTokenStorage;
     }
 
-    public function setLabeler(callable $labeler = null)
+    public function setLabeler(?callable $labeler = null): self
     {
         $this->labeler = $labeler;
+
         return $this;
     }
 
-    public function getLabeler()
+    public function getLabeler(): ?callable
     {
         return $this->labeler;
     }
@@ -124,7 +126,7 @@ class AuditSubscriber implements EventSubscriber
         $uow = $em->getUnitOfWork();
 
         $loggers = [
-            new AuditLogger(function () use($em) {
+            new AuditLogger(function () use ($em) {
                 $this->flush($em);
             })
         ];
@@ -420,7 +422,7 @@ class AuditSubscriber implements EventSubscriber
             $res['fk'] = (string)$this->id($em, $association);
             $res['label'] = $this->label($em, $association);
         } catch (\Exception $e) {
-            $res['fk'] = (string) $association->getId();
+            $res['fk'] = (string)$association->getId();
         }
 
         return $res;
@@ -431,7 +433,7 @@ class AuditSubscriber implements EventSubscriber
         // strip prefixes and repeating garbage from name
         $className = preg_replace("/^(.+\\\)?(.+)(Bundle\\\Entity)/", "$2", $className);
         // underscore and lowercase each subdirectory
-        return implode('.', array_map(function($name) {
+        return implode('.', array_map(function ($name) {
             return strtolower(preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
         }, explode('\\', $className)));
     }
@@ -443,16 +445,16 @@ class AuditSubscriber implements EventSubscriber
         }
         $meta = $em->getClassMetadata(get_class($entity));
         switch (true) {
-        case $meta->hasField('title'):
-            return $meta->getReflectionProperty('title')->getValue($entity);
-        case $meta->hasField('name'):
-            return $meta->getReflectionProperty('name')->getValue($entity);
-        case $meta->hasField('label'):
-            return $meta->getReflectionProperty('label')->getValue($entity);
-        case $meta->getReflectionClass()->hasMethod('__toString'):
-            return (string)$entity;
-        default:
-            return "Unlabeled";
+            case $meta->hasField('title'):
+                return $meta->getReflectionProperty('title')->getValue($entity);
+            case $meta->hasField('name'):
+                return $meta->getReflectionProperty('name')->getValue($entity);
+            case $meta->hasField('label'):
+                return $meta->getReflectionProperty('label')->getValue($entity);
+            case $meta->getReflectionClass()->hasMethod('__toString'):
+                return (string)$entity;
+            default:
+                return "Unlabeled";
         }
     }
 
@@ -470,10 +472,10 @@ class AuditSubscriber implements EventSubscriber
 
         $platform = $em->getConnection()->getDatabasePlatform();
         switch ($type->getName()) {
-        case Types::BOOLEAN:
-            return $type->convertToPHPValue($value, $platform); // json supports boolean values
-        default:
-            return $type->convertToDatabaseValue($value, $platform);
+            case Types::BOOLEAN:
+                return $type->convertToPHPValue($value, $platform); // json supports boolean values
+            default:
+                return $type->convertToDatabaseValue($value, $platform);
         }
     }
 
@@ -498,7 +500,7 @@ class AuditSubscriber implements EventSubscriber
         if (false === $this->blameImpersonator) {
             return null;
         }
-        if(!$token instanceof TokenInterface) {
+        if (!$token instanceof TokenInterface) {
             return null;
         }
 
@@ -516,14 +518,14 @@ class AuditSubscriber implements EventSubscriber
      */
     private function getRoles(TokenInterface $token)
     {
-        if(method_exists($token, 'getRoleNames')){
+        if (method_exists($token, 'getRoleNames')) {
             return $token->getRoleNames();
         }
 
         return $token->getRoles();
     }
 
-    public function getSubscribedEvents()
+    public function getSubscribedEvents(): array
     {
         return [Events::onFlush];
     }

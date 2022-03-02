@@ -15,65 +15,66 @@ class Association
      * @ORM\Column(type="bigint")
      * @ORM\GeneratedValue(strategy="IDENTITY")
      */
-    private $id;
+    private ?int $id;
 
     /**
      * @ORM\Column(length=128)
      */
-    private $typ;
+    private string $typ;
 
     /**
      * @ORM\Column(length=128)
      */
-    private $tbl;
+    private ?string $tbl;
 
     /**
      * @ORM\Column(nullable=true)
      */
-    private $label;
+    private ?string $label;
 
     /**
      * @ORM\Column
      */
-    private $fk;
+    private string $fk;
 
     /**
      * @ORM\Column
      */
-    private $class;
+    private string $class;
 
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getTyp()
+    public function getTyp(): string
     {
         return $this->typ;
     }
 
-    public function getTypLabel()
+    public function getTypLabel(): string
     {
-        $words = explode('.', $this->getTyp());
-        return implode(' ', array_map('ucfirst', explode('_', end($words))));
+        $words = \explode('.', $this->getTyp());
+
+        return \implode(' ', \array_map('ucfirst', \explode('_', \end($words))));
     }
 
-    public function getTbl()
+    public function getTbl(): ?string
     {
         return $this->tbl;
     }
 
-    public function getLabel()
+    public function getLabel(): ?string
     {
         return $this->label;
     }
 
-    public function getFk()
+    public function getFk(): string
     {
         return $this->fk;
     }
 
-    public function getClass()
+    public function getClass(): string
     {
         return $this->class;
     }

@@ -1,0 +1,31 @@
+DataDog\AuditBundle\Entity\AuditLog:
+  type: entity
+  table: audit_logs
+  id:
+    id:
+      type: bigint
+      generator:
+        strategy: IDENTITY
+
+  oneToOne:
+    source:
+      targetEntity: Association
+      joinColumn:
+        nullable: false
+    target:
+      targetEntity: Association
+    blame:
+      targetEntity: Association
+
+  fields:
+    ip:
+      nullable: true
+    action:
+      length: 12
+    tbl:
+      length: 128
+    diff:
+      type: json
+      nullable: true
+    loggedAt:
+      type: datetime

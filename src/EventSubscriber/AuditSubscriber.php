@@ -345,6 +345,15 @@ class AuditSubscriber implements EventSubscriber
             // audit association explicitly sets that.
             $data[$field] = $meta->idGenerator->generate($em, null);
         }
+        // Log the ip address.
+        $masterRequest = $this->requestStack->getMasterRequest();
+        // use this instead when support for symfony <5.3 dropped
+        // $masterRequest = $this->requestStack->getMainRequest();
+        if ($masterRequest !== null) {
+            $data['ip'] = $masterRequest->getClientIp();
+        } else {
+            $data['ip'] = null;
+        }
 
         $meta = $em->getClassMetadata(AuditLog::class);
         $data['loggedAt'] = new \DateTime();

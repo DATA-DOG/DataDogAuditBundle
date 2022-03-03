@@ -97,15 +97,15 @@ class AuditLog
     public function getLoggedAt()
     {
         return $this->loggedAt;
-	}
+    }
 
-	public function getIp(): ?string
-	{
-		return $this->ip;
-	}
+    public function getIp(): ?string
+    {
+        return $this->ip;
+    }
 
-	public function setIp(?string $ip): void
-	{
-		$this->ip = $ip;
+    public function setIp(?string $ip): void
+    {
+        $this->ip = $ip;
     }
 }

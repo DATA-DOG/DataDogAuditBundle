@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "doctrine/dbal": "^3.1.4",
+        "doctrine/dbal": "^2.9|^3.1.4",
         "doctrine/doctrine-bundle": "^2.2",
         "doctrine/orm": "^2.6",
         "symfony/security-bundle": "^5.4|^6.0",

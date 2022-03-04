@@ -1,5 +1,0 @@
-{% if route %}
-  <a class="alert-link" href="{{ path(route, {id: assoc.fk })}}">{{ assoc.label }}</a>
-{% else %}
-  <a class="alert-link" href="#" title="This association has no display page">{{ assoc.label }}</a>
-{% endif %}

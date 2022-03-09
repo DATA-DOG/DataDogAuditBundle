@@ -28,5 +28,12 @@ class DataDogAuditExtension extends Extension
         if (isset($config['blame_impersonator'])) {
             $auditSubscriber->addMethodCall('setBlameImpersonator', array($config['blame_impersonator']));
         }
+
+        if (isset($config['log_user_ip'])) {
+            $auditSubscriber->addMethodCall('setLogIp', array($config['log_user_ip']));
+        }
+        if (isset($config['log_user_agent'])) {
+            $auditSubscriber->addMethodCall('setLogUserAgent', array($config['log_user_agent']));
+        }
     }
 }

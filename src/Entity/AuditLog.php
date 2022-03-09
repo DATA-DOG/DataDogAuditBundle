@@ -8,6 +8,10 @@ class AuditLog
 
     private string $action;
 
+    private ?string $ip;
+
+    private ?string $userAgent;
+
     private string $tbl;
 
     private Association $source;
@@ -58,5 +62,15 @@ class AuditLog
     public function getLoggedAt(): \DateTimeInterface
     {
         return $this->loggedAt;
+    }
+
+    public function getIp(): ?string
+    {
+        return $this->ip;
+    }
+
+    public function getUserAgent(): ?string
+    {
+        return $this->userAgent;
     }
 }

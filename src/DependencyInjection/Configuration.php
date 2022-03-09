@@ -28,8 +28,18 @@ class Configuration implements ConfigurationInterface
             ->end()
             ->children()
                 ->booleanNode('blame_impersonator')
-                ->defaultFalse()
+                    ->defaultFalse()
+                ->end()
             ->end()
+            ->children()
+                ->booleanNode('log_user_ip')
+                    ->defaultFalse()
+                ->end()
+                ->booleanNode('log_user_agent')
+                    ->defaultFalse()
+                ->end()
+            ->end()
+
         ;
         // @formatter:on
 

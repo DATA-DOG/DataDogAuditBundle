@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
@@ -52,9 +53,19 @@ class AuditSubscriber implements EventSubscriber
 
     protected TokenStorageInterface $securityTokenStorage;
 
-    public function __construct(TokenStorageInterface $securityTokenStorage)
+    private RequestStack $requestStack;
+
+    private bool $logIp = false;
+
+    private bool $logUserAgent = false;
+
+    public function __construct(
+        TokenStorageInterface $securityTokenStorage,
+        RequestStack $requestStack
+    )
     {
         $this->securityTokenStorage = $securityTokenStorage;
+        $this->requestStack = $requestStack;
     }
 
     public function setLabeler(?callable $labeler = null): self
@@ -346,14 +357,12 @@ class AuditSubscriber implements EventSubscriber
             $data[$field] = $meta->idGenerator->generate($em, null);
         }
         // Log the ip address.
-        $masterRequest = $this->requestStack->getMasterRequest();
+        $mainRequest = $this->requestStack->getMasterRequest();
         // use this instead when support for symfony <5.3 dropped
-        // $masterRequest = $this->requestStack->getMainRequest();
-        if ($masterRequest !== null) {
-            $data['ip'] = $masterRequest->getClientIp();
-        } else {
-            $data['ip'] = null;
-        }
+        // $mainRequest = $this->requestStack->getMainRequest();
+
+        $data['ip'] = $this->logIp && $mainRequest ? $mainRequest->getClientIp() : null;
+        $data['userAgent'] = $this->logUserAgent && $mainRequest ? substr($mainRequest->headers->get('User-Agent'), 0, 255) : null;
 
         $meta = $em->getClassMetadata(AuditLog::class);
         $data['loggedAt'] = new \DateTime();
@@ -542,5 +551,15 @@ class AuditSubscriber implements EventSubscriber
     public function setBlameUser(UserInterface $user)
     {
         $this->blameUser = $user;
+    }
+
+    public function setLogIp(bool $logIp): void
+    {
+        $this->logIp = $logIp;
+    }
+
+    public function setLogUserAgent(bool $logUserAgent): void
+    {
+        $this->logUserAgent = $logUserAgent;
     }
 }

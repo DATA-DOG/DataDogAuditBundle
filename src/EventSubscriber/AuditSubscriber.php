@@ -59,6 +59,8 @@ class AuditSubscriber implements EventSubscriber
 
     private bool $logUserAgent = false;
 
+    private int $truncateUserAgent = 1024;
+
     public function __construct(
         TokenStorageInterface $securityTokenStorage,
         RequestStack $requestStack
@@ -356,13 +358,11 @@ class AuditSubscriber implements EventSubscriber
             // audit association explicitly sets that.
             $data[$field] = $meta->idGenerator->generate($em, null);
         }
-        // Log the ip address.
-        $mainRequest = $this->requestStack->getMasterRequest();
-        // use this instead when support for symfony <5.3 dropped
-        // $mainRequest = $this->requestStack->getMainRequest();
 
+        // Log the ip address and User Agent String.
+        $mainRequest = $this->requestStack->getMainRequest();
         $data['ip'] = $this->logIp && $mainRequest ? $mainRequest->getClientIp() : null;
-        $data['userAgent'] = $this->logUserAgent && $mainRequest ? substr($mainRequest->headers->get('User-Agent'), 0, 255) : null;
+        $data['userAgent'] = $this->logUserAgent && $mainRequest ? substr($mainRequest->headers->get('User-Agent'), 0, $this->truncateUserAgent) : null;
 
         $meta = $em->getClassMetadata(AuditLog::class);
         $data['loggedAt'] = new \DateTime();
@@ -561,5 +561,10 @@ class AuditSubscriber implements EventSubscriber
     public function setLogUserAgent(bool $logUserAgent): void
     {
         $this->logUserAgent = $logUserAgent;
+    }
+
+    public function setTruncateUserAgent(int $truncateUserAgent): void
+    {
+        $this->truncateUserAgent = $truncateUserAgent;
     }
 }

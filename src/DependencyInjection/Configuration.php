@@ -38,6 +38,9 @@ class Configuration implements ConfigurationInterface
                 ->booleanNode('log_user_agent')
                     ->defaultFalse()
                 ->end()
+                ->integerNode('truncate_user_agent')
+                    ->defaultValue(1024)
+                ->end()
             ->end()
 
         ;

@@ -35,5 +35,8 @@ class DataDogAuditExtension extends Extension
         if (isset($config['log_user_agent'])) {
             $auditSubscriber->addMethodCall('setLogUserAgent', array($config['log_user_agent']));
         }
+        if (isset($config['truncate_user_agent'])) {
+            $auditSubscriber->addMethodCall('setTruncateUserAgent', array($config['truncate_user_agent']));
+        }
     }
 }

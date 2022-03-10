@@ -362,7 +362,8 @@ class AuditSubscriber implements EventSubscriber
         // Log the ip address and User Agent String.
         $mainRequest = $this->requestStack->getMainRequest();
         $data['ip'] = $this->logIp && $mainRequest ? $mainRequest->getClientIp() : null;
-        $data['userAgent'] = $this->logUserAgent && $mainRequest ? substr($mainRequest->headers->get('User-Agent'), 0, $this->truncateUserAgent) : null;
+        $userAgent = $mainRequest ? $mainRequest->headers->get('User-Agent') : null;
+        $data['userAgent'] = $this->logUserAgent && $userAgent ? substr($userAgent, 0, $this->truncateUserAgent) : null;
 
         $meta = $em->getClassMetadata(AuditLog::class);
         $data['loggedAt'] = new \DateTime();

@@ -15,7 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
  */
 #[ORM\Entity]
 #[ORM\Table]
-class Tag
+class Post
 {
     /**
      * @ORM\Id()
@@ -31,17 +31,17 @@ class Tag
      * @ORM\Column(type="string", length=255)
      */
     #[ORM\Column(type: Types::STRING, length: 255)]
-    private string $name;
+    private string $title;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Post::class, mappedBy="tags")
+     * @ORM\ManyToMany(targetEntity=Tag::class, inversedBy="posts")
      */
-    #[ORM\ManyToMany(targetEntity: Post::class, mappedBy: 'tags')]
-    private Collection $posts;
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'posts')]
+    private Collection $tags;
 
     public function __construct()
     {
-        $this->posts = new ArrayCollection();
+        $this->tags = new ArrayCollection();
     }
 
     public function getId(): int
@@ -49,41 +49,39 @@ class Tag
         return $this->id;
     }
 
-    public function getName(): string
+    public function getTitle(): string
     {
-        return $this->name;
+        return $this->title;
     }
 
-    public function setName(string $name): self
+    public function setTitle(string $title): self
     {
-        $this->name = $name;
+        $this->title = $title;
 
         return $this;
     }
 
     /**
-     * @return Post[]
+     * @return Tag[]
      */
-    public function getPosts(): Collection
+    public function getTags(): Collection
     {
-        return $this->posts;
+        return $this->tags;
     }
 
-    public function addPost(Post $post): self
+    public function addTag(Tag $tag): self
     {
-        if (!$this->posts->contains($post)) {
-            $this->posts[] = $post;
-            $post->addTag($this);
+        if (!$this->tags->contains($tag)) {
+            $this->tags[] = $tag;
         }
 
         return $this;
     }
 
-    public function removePost(Post $post): self
+    public function removeTag(Tag $tag): self
     {
-        if ($this->posts->contains($post)) {
-            $this->posts->removeElement($post);
-            $post->removeTag($this);
+        if ($this->tags->contains($tag)) {
+            $this->tags->removeElement($tag);
         }
 
         return $this;

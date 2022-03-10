@@ -17,7 +17,22 @@ final class AuditSubscriberTest extends OrmTestCase
         $this->loadFixtures();
     }
 
-    public function testCorrectNumberOfAuditLogs(): void
+    public function testSingleEntityCreation(): void
+    {
+        $this->resetDatabase();
+
+        $em = $this->getDoctrine()->getManager();
+
+        $tag1 = new Tag();
+        $tag1->setName('Books');
+
+        $em->persist($tag1);
+        $em->flush();
+
+        $this->assertCount(1, $em->createQuery('SELECT l FROM '.AuditLog::class.' l')->getResult());
+    }
+
+    public function testSingleEntityUpdate(): void
     {
         $this->resetDatabase();
 

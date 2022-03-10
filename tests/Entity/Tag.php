@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DataDog\AuditBundle\Tests\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -15,19 +16,19 @@ use Doctrine\ORM\Mapping as ORM;
 class Tag
 {
     /**
-     * @ORM\Column(type="integer")
      * @ORM\Id()
-     * @ORM\GeneratedValue(strategy="AUTO")
+     * @ORM\GeneratedValue()
+     * @ORM\Column(type="integer")
      */
-    #[ORM\Column]
     #[ORM\Id]
     #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER)]
     private int $id;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", length=255)
      */
-    #[ORM\Column(nullable: true)]
+    #[ORM\Column(type: Types::STRING, length: 255)]
     private string $name;
 
     public function getId(): int

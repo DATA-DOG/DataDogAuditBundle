@@ -53,13 +53,13 @@ class AuditSubscriber implements EventSubscriber
 
     protected TokenStorageInterface $securityTokenStorage;
 
-    private RequestStack $requestStack;
+    protected RequestStack $requestStack;
 
-    private bool $logIp = false;
+    protected bool $logIp = false;
 
-    private bool $logUserAgent = false;
+    protected bool $logUserAgent = false;
 
-    private int $truncateUserAgent = 1024;
+    protected int $truncateUserAgent = 1024;
 
     public function __construct(
         TokenStorageInterface $securityTokenStorage,

@@ -7,7 +7,7 @@
         <id name="id" type="bigint" column="id">
             <generator strategy="AUTO" />
         </id>
-        <field name="ip" nullable="true" type="string" length="32"/>
+        <field name="ip" nullable="true" type="string" length="255"/>
         <field name="userAgent" nullable="true" type="text"/>
         <field name="action" length="12" />
         <field name="tbl" length="128" />

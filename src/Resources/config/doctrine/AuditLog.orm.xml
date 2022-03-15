@@ -5,7 +5,7 @@
                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
     <entity name="DataDog\AuditBundle\Entity\AuditLog" table="audit_logs">
         <id name="id" type="bigint" column="id">
-            <generator strategy="AUTO" />
+            <generator strategy="IDENTITY" />
         </id>
         <field name="ip" nullable="true" type="string" length="255"/>
         <field name="userAgent" nullable="true" type="text"/>

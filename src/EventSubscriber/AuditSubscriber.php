@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
@@ -52,9 +53,21 @@ class AuditSubscriber implements EventSubscriber
 
     protected TokenStorageInterface $securityTokenStorage;
 
-    public function __construct(TokenStorageInterface $securityTokenStorage)
+    protected RequestStack $requestStack;
+
+    protected bool $logIp = false;
+
+    protected bool $logUserAgent = false;
+
+    protected int $truncateUserAgent = 1024;
+
+    public function __construct(
+        TokenStorageInterface $securityTokenStorage,
+        RequestStack $requestStack
+    )
     {
         $this->securityTokenStorage = $securityTokenStorage;
+        $this->requestStack = $requestStack;
     }
 
     public function setLabeler(?callable $labeler = null): self
@@ -346,6 +359,12 @@ class AuditSubscriber implements EventSubscriber
             $data[$field] = $meta->idGenerator->generate($em, null);
         }
 
+        // Log the ip address and User Agent String.
+        $mainRequest = $this->requestStack->getMainRequest();
+        $data['ip'] = $this->logIp && $mainRequest ? $mainRequest->getClientIp() : null;
+        $userAgent = $mainRequest ? $mainRequest->headers->get('User-Agent') : null;
+        $data['userAgent'] = $this->logUserAgent && $userAgent ? substr($userAgent, 0, $this->truncateUserAgent) : null;
+
         $meta = $em->getClassMetadata(AuditLog::class);
         $data['loggedAt'] = new \DateTime();
         $idx = 1;
@@ -533,5 +552,20 @@ class AuditSubscriber implements EventSubscriber
     public function setBlameUser(UserInterface $user)
     {
         $this->blameUser = $user;
+    }
+
+    public function setLogIp(bool $logIp): void
+    {
+        $this->logIp = $logIp;
+    }
+
+    public function setLogUserAgent(bool $logUserAgent): void
+    {
+        $this->logUserAgent = $logUserAgent;
+    }
+
+    public function setTruncateUserAgent(int $truncateUserAgent): void
+    {
+        $this->truncateUserAgent = $truncateUserAgent;
     }
 }

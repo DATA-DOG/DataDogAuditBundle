@@ -12,7 +12,8 @@ return static function (ContainerConfigurator $container) {
     $services
         ->set('datadog.event_subscriber.audit', AuditSubscriber::class)->private()
         ->arg(0, new Reference(TokenStorageInterface::class))
-        ->tag('doctrine.event_subscriber')
+        //->tag('doctrine.event_subscriber')
+        ->tag('doctrine.event_listener', ['event' => 'onFlush',])
     ;
     // @formatter:on
 };

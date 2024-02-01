@@ -19,7 +19,7 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class AuditSubscriber implements EventSubscriber
+class AuditSubscriber
 {
     /**
      * @var callable|null
@@ -120,7 +120,7 @@ class AuditSubscriber implements EventSubscriber
         return $isEntityUnaudited;
     }
 
-    public function onFlush(OnFlushEventArgs $args)
+    public function onFlush(OnFlushEventArgs $args): void
     {
         $em = $args->getEntityManager();
         $uow = $em->getUnitOfWork();
@@ -523,11 +523,6 @@ class AuditSubscriber implements EventSubscriber
         }
 
         return $token->getRoles();
-    }
-
-    public function getSubscribedEvents(): array
-    {
-        return [Events::onFlush];
     }
 
     public function setBlameUser(UserInterface $user)

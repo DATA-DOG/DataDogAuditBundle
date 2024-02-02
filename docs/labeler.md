@@ -22,14 +22,14 @@ class AuditLabler
 }
 ```
 
-Re-define the audit subscriber service to call the `setLabler` method of the `AuditSubscriber` with the [callable](https://www.php.net/manual/en/language.types.callable.php).
+Re-define the audit listener service to call the `setLabler` method of the `AuditListener` with the [callable](https://www.php.net/manual/en/language.types.callable.php).
 
 `app/config/services.yml`
 
 ```yaml
 services:
-    datadog.event_subscriber.audit:
-        class: 'DataDog\AuditBundle\EventSubscriber\AuditSubscriber'
+    datadog.event_listener.audit:
+        class: 'DataDog\AuditBundle\EventListener\AuditListener'
         arguments: ['@security.token_storage']
         tags:
           - { name: doctrine.event_subscriber, connection: default }

@@ -10,11 +10,12 @@ defaults:
 
 jobs:
     test:
-        runs-on: ubuntu-20.04
+        runs-on: ubuntu-22.04
 
         strategy:
+            fail-fast: false
             matrix:
-                php: ['7.4', '8.0', '8.1']
+                php: ['8.0', '8.1', '8.2', '8.3']
 
         steps:
             -   name: Checkout

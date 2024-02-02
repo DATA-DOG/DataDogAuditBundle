@@ -1,6 +1,6 @@
 <?php
 
-namespace DataDog\AuditBundle\EventSubscriber;
+namespace DataDog\AuditBundle\EventListener;
 
 use DataDog\AuditBundle\DBAL\AuditLogger;
 use DataDog\AuditBundle\Entity\Association;
@@ -19,7 +19,7 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class AuditSubscriber
+class AuditListener
 {
     /**
      * @var callable|null

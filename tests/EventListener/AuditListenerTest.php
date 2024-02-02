@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace DataDog\AuditBundle\Tests\EventSubscriber;
+namespace DataDog\AuditBundle\Tests\EventListener;
 
 use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Tests\Entity\Post;
 use DataDog\AuditBundle\Tests\Entity\Tag;
 use DataDog\AuditBundle\Tests\OrmTestCase;
 
-final class AuditSubscriberTest extends OrmTestCase
+final class AuditListenerTest extends OrmTestCase
 {
     protected function setUp(): void
     {

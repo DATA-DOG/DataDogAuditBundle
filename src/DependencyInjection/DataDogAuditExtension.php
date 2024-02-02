@@ -17,16 +17,16 @@ class DataDogAuditExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $auditSubscriber = $container->getDefinition('datadog.event_subscriber.audit');
+        $auditListener = $container->getDefinition('datadog.event_listener.audit');
 
         if (isset($config['audited_entities']) && !empty($config['audited_entities'])) {
-            $auditSubscriber->addMethodCall('addAuditedEntities', array($config['audited_entities']));
+            $auditListener->addMethodCall('addAuditedEntities', array($config['audited_entities']));
         } else if (isset($config['unaudited_entities'])) {
-            $auditSubscriber->addMethodCall('addUnauditedEntities', array($config['unaudited_entities']));
+            $auditListener->addMethodCall('addUnauditedEntities', array($config['unaudited_entities']));
         }
 
         if (isset($config['blame_impersonator'])) {
-            $auditSubscriber->addMethodCall('setBlameImpersonator', array($config['blame_impersonator']));
+            $auditListener->addMethodCall('setBlameImpersonator', array($config['blame_impersonator']));
         }
     }
 }

@@ -6,15 +6,10 @@ namespace DataDog\AuditBundle\Command;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-#[AsCommand(
-    name: 'audit-logs:delete-old-logs',
-    description: 'Remove old records from the audit logs',
-)]
 class AuditLogDeleteOldLogsCommand extends Command
 {
     public const DEFAULT_RETENTION_PERIOD = 'P3M';
@@ -23,6 +18,13 @@ class AuditLogDeleteOldLogsCommand extends Command
         protected Connection $connection
     ) {
         parent::__construct();
+    }
+
+    #[\Override]
+    protected function configure(): void
+    {
+        $this->setName('audit-logs:delete-old-logs')
+            ->setDescription('Remove old records from the audit logs');
     }
 
     #[\Override]

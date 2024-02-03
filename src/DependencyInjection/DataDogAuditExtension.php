@@ -17,7 +17,7 @@ class DataDogAuditExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $auditListener = $container->getDefinition('datadog.event_listener.audit');
+        $auditListener = $container->getDefinition('data_dog_audit.onflush_listener');
 
         if (isset($config['audited_entities']) && !empty($config['audited_entities'])) {
             $auditListener->addMethodCall('addAuditedEntities', array($config['audited_entities']));

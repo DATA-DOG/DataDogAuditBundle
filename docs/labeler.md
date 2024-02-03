@@ -28,7 +28,7 @@ Re-define the audit listener service to call the `setLabler` method of the `Audi
 
 ```yaml
 services:
-    data_dog_audit.onflush_listener:
+    data_dog_audit.listener.audit:
         class: 'DataDog\AuditBundle\EventListener\AuditListener'
         arguments: ['@security.token_storage']
         tags:

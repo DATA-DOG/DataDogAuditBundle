@@ -13,7 +13,7 @@ return static function (ContainerConfigurator $container) {
     // @formatter:off
     $services = $container->services();
     $services
-        ->set('data_dog_audit.onflush_listener', AuditListener::class)->private()
+        ->set('data_dog_audit.listener.audit', AuditListener::class)->private()
         ->arg(0, new Reference(TokenStorageInterface::class))
         ->tag('doctrine.event_listener', ['event' => Events::onFlush,])
     ;

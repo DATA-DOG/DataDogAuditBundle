@@ -2,6 +2,7 @@
 
 namespace DataDog\AuditBundle\DependencyInjection;
 
+use DataDog\AuditBundle\EventListener\AuditListener;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
@@ -17,7 +18,7 @@ class DataDogAuditExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $auditListener = $container->getDefinition('datadog.event_listener.audit');
+        $auditListener = $container->getDefinition(AuditListener::class);
 
         if (isset($config['audited_entities']) && !empty($config['audited_entities'])) {
             $auditListener->addMethodCall('addAuditedEntities', array($config['audited_entities']));

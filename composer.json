@@ -20,14 +20,14 @@
         "doctrine/dbal": "^2.9|^3.1.4",
         "doctrine/doctrine-bundle": "^2.9",
         "doctrine/orm": "^2.9",
-        "symfony/security-bundle": "^5.4|^6.0",
-        "symfony/framework-bundle": "^5.4|^6.0"
+        "symfony/security-bundle": "^6.4",
+        "symfony/framework-bundle": "^6.4"
     },
     "require-dev": {
         "ext-pdo": "*",
         "ext-pdo_sqlite": "*",
         "phpunit/phpunit": "^9",
-        "symfony/phpunit-bridge": "^5.4|^6.0"
+        "symfony/phpunit-bridge": "^6.4"
     },
     "autoload": {
         "psr-4": {

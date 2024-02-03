@@ -246,7 +246,7 @@ class AuditListener
         $this->dissociated = [];
     }
 
-    protected function associate(EntityManager $em, $source, $target, array $mapping)
+    protected function associate(EntityManager $em, $source, $target, array $mapping): void
     {
         $this->audit($em, [
             'source' => $this->assoc($em, $source),
@@ -258,7 +258,7 @@ class AuditListener
         ]);
     }
 
-    protected function dissociate(EntityManager $em, $source, $target, $id, array $mapping)
+    protected function dissociate(EntityManager $em, $source, $target, $id, array $mapping): void
     {
         $this->audit($em, [
             'source' => $this->assoc($em, $source),
@@ -270,7 +270,7 @@ class AuditListener
         ]);
     }
 
-    protected function insert(EntityManager $em, $entity, array $ch)
+    protected function insert(EntityManager $em, $entity, array $ch): void
     {
         $diff = $this->diff($em, $entity, $ch);
         if (empty($diff)) {
@@ -287,7 +287,7 @@ class AuditListener
         ]);
     }
 
-    protected function update(EntityManager $em, $entity, array $ch)
+    protected function update(EntityManager $em, $entity, array $ch): void
     {
         $diff = $this->diff($em, $entity, $ch);
         if (empty($diff)) {
@@ -304,7 +304,7 @@ class AuditListener
         ]);
     }
 
-    protected function remove(EntityManager $em, $entity, $id)
+    protected function remove(EntityManager $em, $entity, $id): void
     {
         $meta = $em->getClassMetadata(get_class($entity));
         $source = array_merge($this->assoc($em, $entity), ['fk' => $id]);
@@ -318,7 +318,7 @@ class AuditListener
         ]);
     }
 
-    protected function audit(EntityManager $em, array $data)
+    protected function audit(EntityManager $em, array $data): void
     {
         $c = $em->getConnection();
         $p = $c->getDatabasePlatform();
@@ -377,7 +377,7 @@ class AuditListener
         return $pk;
     }
 
-    protected function diff(EntityManager $em, $entity, array $ch)
+    protected function diff(EntityManager $em, $entity, array $ch): array
     {
         $uow = $em->getUnitOfWork();
         $meta = $em->getClassMetadata(get_class($entity));
@@ -404,7 +404,7 @@ class AuditListener
         return $diff;
     }
 
-    protected function assoc(EntityManager $em, $association = null)
+    protected function assoc(EntityManager $em, $association = null): ?array
     {
         if (null === $association) {
             return null;
@@ -426,7 +426,7 @@ class AuditListener
         return $res;
     }
 
-    protected function typ($className)
+    protected function typ($className): string
     {
         // strip prefixes and repeating garbage from name
         $className = preg_replace("/^(.+\\\)?(.+)(Bundle\\\Entity)/", "$2", $className);
@@ -477,7 +477,7 @@ class AuditListener
         }
     }
 
-    protected function blame(EntityManager $em)
+    protected function blame(EntityManager $em): ?array
     {
         if ($this->blameUser instanceof UserInterface && \method_exists($this->blameUser, 'getId')) {
             return $this->assoc($em, $this->blameUser);
@@ -514,7 +514,7 @@ class AuditListener
      * @param TokenInterface $token
      * @return array
      */
-    private function getRoles(TokenInterface $token)
+    private function getRoles(TokenInterface $token): array
     {
         if (method_exists($token, 'getRoleNames')) {
             return $token->getRoleNames();
@@ -523,7 +523,7 @@ class AuditListener
         return $token->getRoles();
     }
 
-    public function setBlameUser(UserInterface $user)
+    public function setBlameUser(UserInterface $user): void
     {
         $this->blameUser = $user;
     }

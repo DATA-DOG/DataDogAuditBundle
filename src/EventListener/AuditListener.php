@@ -5,7 +5,7 @@ namespace DataDog\AuditBundle\EventListener;
 use DataDog\AuditBundle\DBAL\AuditLogger;
 use DataDog\AuditBundle\Entity\Association;
 use DataDog\AuditBundle\Entity\AuditLog;
-use Doctrine\Common\EventSubscriber;
+use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\DBAL\Logging\LoggerChain;
 use Doctrine\DBAL\Logging\SQLLogger;
 use Doctrine\DBAL\Types\Type;
@@ -14,11 +14,14 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Symfony\Component\DependencyInjection\Attribute\AsAlias;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+#[AsDoctrineListener(Events::onFlush)]
+#[AsAlias(id: 'datadog.event_listener.audit', public: false)]
 class AuditListener
 {
     /**

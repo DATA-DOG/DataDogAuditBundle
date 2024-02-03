@@ -12,7 +12,7 @@ class Association
     #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'IDENTITY')]
-    private ?int $id;
+    private ?string $id;
 
     #[ORM\Column(length: 128)]
     private string $typ;
@@ -29,7 +29,7 @@ class Association
     #[ORM\Column]
     private string $class;
 
-    public function getId(): ?int
+    public function getId(): ?string
     {
         return $this->id;
     }

@@ -2,31 +2,18 @@
 
 namespace DataDog\AuditBundle\Entity;
 
-use Doctrine\ORM\Mapping as ORM;
-
-#[ORM\Entity]
-#[ORM\Table(name: 'audit_associations')]
-#[ORM\Index(columns: ['fk'])]
 class Association
 {
-    #[ORM\Column(type: 'bigint', options: ['unsigned' => true])]
-    #[ORM\Id]
-    #[ORM\GeneratedValue(strategy: 'IDENTITY')]
     private ?string $id;
 
-    #[ORM\Column(length: 128)]
     private string $typ;
 
-    #[ORM\Column(length: 128, nullable: true)]
     private ?string $tbl;
 
-    #[ORM\Column(nullable: true)]
     private ?string $label;
 
-    #[ORM\Column(type: 'integer', options: ['unsigned' => true])]
     private int $fk;
 
-    #[ORM\Column]
     private string $class;
 
     public function getId(): ?string

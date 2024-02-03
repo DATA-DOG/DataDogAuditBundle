@@ -13,8 +13,9 @@ class DataDogAuditBundle extends Bundle
         parent::build($container);
 
         if (class_exists(DoctrineOrmMappingsPass::class)) {
+            $namespaces = [__DIR__.'/../config/doctrine' => 'DataDog\\AuditBundle\\Entity'];
             $container->addCompilerPass(
-                DoctrineOrmMappingsPass::createAttributeMappingDriver(['DataDog\\AuditBundle\\Entity'], [__DIR__.'/Entity'])
+                DoctrineOrmMappingsPass::createXmlMappingDriver($namespaces)
             );
         }
     }

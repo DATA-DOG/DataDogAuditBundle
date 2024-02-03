@@ -1,0 +1,32 @@
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                          https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="DataDog\AuditBundle\Entity\AuditLog" table="audit_logs">
+
+        <id name="id" type="bigint" column="id">
+            <generator strategy="IDENTITY"/>
+            <options>
+                <option name="unsigned">true</option>
+            </options>
+        </id>
+
+        <field name="action" length="12" />
+        <field name="tbl" length="128" />
+        <field name="diff" type="json" nullable="true" />
+        <field name="loggedAt" type="datetime" column="logged_at" />
+
+        <one-to-one field="source" target-entity="Association">
+            <join-column nullable="false" />
+        </one-to-one>
+        <one-to-one field="target" target-entity="Association" />
+        <one-to-one field="blame" target-entity="Association" />
+
+        <indexes>
+            <index columns="logged_at"/>
+        </indexes>
+
+    </entity>
+
+</doctrine-mapping>

@@ -4,6 +4,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use DataDog\AuditBundle\Command\AuditLogDeleteOldLogsCommand;
 use DataDog\AuditBundle\EventListener\AuditListener;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\Events;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
@@ -18,6 +19,7 @@ return static function (ContainerConfigurator $container) {
     ;
 
     $services->set('datadog.command.delete_old_logs', AuditLogDeleteOldLogsCommand::class)
+        ->arg(0, new Reference(Connection::class))
         ->tag('console.command')
     ;
     // @formatter:on

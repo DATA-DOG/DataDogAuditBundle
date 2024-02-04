@@ -90,13 +90,13 @@ You can archive this by adding the `blame_impersonator` configuration key in you
 
 The default behavior is to blame the logged-in user, so it will ignore the `impersonator` when not explicitly declared.
 
-## Clean old logs
+## Clean up old logs
 
-To clean logs older than 3 months, use the following command:
+To clean up old logs, use the following command:
 
-```bin/console audit-logs:delete-old-logs```
+```bin/console audit-logs:delete-old-logs --retention-period=P6M```
 
-
+You can specify `retention-period`, For format, see: https://www.php.net/manual/en/dateinterval.construct.php 
 ## License
 
 The audit bundle is free to use and is licensed under the [MIT license](https://opensource.org/licenses/mit-license.php)

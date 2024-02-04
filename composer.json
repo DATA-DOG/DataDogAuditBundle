@@ -21,7 +21,8 @@
         "doctrine/doctrine-bundle": "^2.9",
         "doctrine/orm": "^2.13",
         "symfony/security-bundle": "^6.4",
-        "symfony/framework-bundle": "^6.4"
+        "symfony/framework-bundle": "^6.4",
+        "symfony/console": "^6.4"
     },
     "require-dev": {
         "ext-pdo": "*",

@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class AuditLogDeleteOldLogsCommand extends Command
@@ -24,13 +25,15 @@ class AuditLogDeleteOldLogsCommand extends Command
     protected function configure(): void
     {
         $this->setName('audit-logs:delete-old-logs')
-            ->setDescription('Remove old records from the audit logs');
+            ->setDescription('Remove old records from the audit logs')
+            ->addOption('retention-period', null, InputOption::VALUE_OPTIONAL, 'The retention interval, format: https://www.php.net/manual/en/dateinterval.construct.php', self::DEFAULT_RETENTION_PERIOD)
+        ;
     }
 
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $date = (new \DateTime())->sub(new \DateInterval(self::DEFAULT_RETENTION_PERIOD));
+        $date = (new \DateTime())->sub(new \DateInterval($input->getOption('retention-period')));
         $formattedDate = $date->format('Y-m-d H:i:s');
 
         $output->writeln(sprintf('<info>Delete all records before %s</info>', $formattedDate));
@@ -85,7 +88,7 @@ class AuditLogDeleteOldLogsCommand extends Command
         $allRecords = 0;
         $this->connection->executeQuery('SET FOREIGN_KEY_CHECKS=0');
 
-        $sql = 'DELETE LOW_PRIORITY FROM mscm.audit_associations WHERE id <= ? ORDER BY id LIMIT 10000';
+        $sql = 'DELETE LOW_PRIORITY FROM audit_associations WHERE id <= ? ORDER BY id LIMIT 10000';
         $stmt = $this->connection->prepare($sql);
         $stmt->bindValue(1, $startRecordId, ParameterType::INTEGER);
         do {

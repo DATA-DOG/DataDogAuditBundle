@@ -1,10 +1,5 @@
-/example/web/bundles/
-/example/app/bootstrap.php.cache
-/example/app/pager.db3
-/example/app/cache/*
-/example/app/logs/*
-!example/app/cache/.gitkeep
-!example/app/logs/.gitkeep
+/vendor/
+/.phpunit.result.cache
 /composer.lock
 /phpunit.xml
-/vendor
+/.idea

@@ -90,16 +90,12 @@ You can archive this by adding the `blame_impersonator` configuration key in you
 
 The default behavior is to blame the logged-in user, so it will ignore the `impersonator` when not explicitly declared.
 
-## Screenshots
+## Clean old logs
 
-All paginated audit log:
-![Screenshot](https://raw.githubusercontent.com/DATA-DOG/DataDogAuditBundle/master/screenshots/audit1.png)
+To clean logs older than 3 months, use the following command:
 
-Clicked on history reference for specific resource:
-![Screenshot](https://raw.githubusercontent.com/DATA-DOG/DataDogAuditBundle/master/screenshots/audit2.png)
+```bin/console audit-logs:delete-old-logs```
 
-Showing insert data:
-![Screenshot](https://raw.githubusercontent.com/DATA-DOG/DataDogAuditBundle/master/screenshots/audit3.png)
 
 ## License
 

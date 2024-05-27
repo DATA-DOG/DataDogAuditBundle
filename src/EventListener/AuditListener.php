@@ -2,16 +2,14 @@
 
 namespace DataDog\AuditBundle\EventListener;
 
-use DataDog\AuditBundle\DBAL\AuditLogger;
 use DataDog\AuditBundle\Entity\Association;
 use DataDog\AuditBundle\Entity\AuditLog;
-use Doctrine\DBAL\Logging\LoggerChain;
-use Doctrine\DBAL\Logging\SQLLogger;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
@@ -23,8 +21,6 @@ class AuditListener
      * @var callable|null
      */
     protected $labeler;
-
-    protected ?SQLLogger $old;
 
     protected $auditedEntities = [];
 
@@ -48,12 +44,12 @@ class AuditListener
 
     protected ?UserInterface $blameUser = null;
 
-    protected TokenStorageInterface $securityTokenStorage;
+    protected array $middlewares;
 
-    public function __construct(TokenStorageInterface $securityTokenStorage)
-    {
-        $this->securityTokenStorage = $securityTokenStorage;
-    }
+    public function __construct(
+        private readonly TokenStorageInterface $securityTokenStorage,
+        private readonly EntityManagerInterface $entityManager
+    ) {}
 
     public function setLabeler(?callable $labeler = null): self
     {
@@ -120,24 +116,15 @@ class AuditListener
 
     public function onFlush(OnFlushEventArgs $args): void
     {
-        $em = $args->getEntityManager();
+        $em = $this->entityManager;
         $uow = $em->getUnitOfWork();
 
-        $loggers = [
-            new AuditLogger(function () use ($em) {
-                $this->flush($em);
-            })
-        ];
-
-        // extend the sql logger
-        $this->old = $em->getConnection()->getConfiguration()->getSQLLogger();
-
-        if ($this->old instanceof SQLLogger) {
-            $loggers[] = $this->old;
+        $middlewares = $this->entityManager->getConnection()->getConfiguration()->getMiddlewares();
+        foreach ($middlewares as $middleware) {
+            if($middleware::class === 'DataDog\AuditBundle\DBAL\Middleware\AuditFlushMiddleware'){
+                $middleware->flushHandler = [$this, 'flush'];
+            }
         }
-
-        $new = new LoggerChain($loggers);
-        $em->getConnection()->getConfiguration()->setSQLLogger($new);
 
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
             if ($this->isEntityUnaudited($entity)) {
@@ -163,8 +150,13 @@ class AuditListener
                 continue;
             }
             $mapping = $collection->getMapping();
-            if (!$mapping['isOwningSide'] || $mapping['type'] !== ClassMetadataInfo::MANY_TO_MANY) {
+            if (!$mapping['isOwningSide'] || $mapping['type'] !== ClassMetadata::MANY_TO_MANY) {
                 continue; // ignore inverse side or one to many relations
+            }
+            // For backward compatibility:
+            // If $mapping is not already an array, convert it to an array.
+            if (!is_array($mapping)) {
+                $mapping = $mapping->toArray();
             }
             foreach ($collection->getInsertDiff() as $entity) {
                 if ($this->isEntityUnaudited($entity)) {
@@ -184,7 +176,7 @@ class AuditListener
                 continue;
             }
             $mapping = $collection->getMapping();
-            if (!$mapping['isOwningSide'] || $mapping['type'] !== ClassMetadataInfo::MANY_TO_MANY) {
+            if (!$mapping['isOwningSide'] || $mapping['type'] !== ClassMetadata::MANY_TO_MANY) {
                 continue; // ignore inverse side or one to many relations
             }
             foreach ($collection->toArray() as $entity) {
@@ -196,47 +188,46 @@ class AuditListener
         }
     }
 
-    protected function flush(EntityManager $em)
+    public function flush()
     {
-        $em->getConnection()->getConfiguration()->setSQLLogger($this->old);
-        $uow = $em->getUnitOfWork();
+        $uow = $this->entityManager->getUnitOfWork();
 
         $auditPersister = $uow->getEntityPersister(AuditLog::class);
         $rmAuditInsertSQL = new \ReflectionMethod($auditPersister, 'getInsertSQL');
         $rmAuditInsertSQL->setAccessible(true);
-        $this->auditInsertStmt = $em->getConnection()->prepare($rmAuditInsertSQL->invoke($auditPersister));
+        $this->auditInsertStmt = $this->entityManager->getConnection()->prepare($rmAuditInsertSQL->invoke($auditPersister));
         $assocPersister = $uow->getEntityPersister(Association::class);
         $rmAssocInsertSQL = new \ReflectionMethod($assocPersister, 'getInsertSQL');
         $rmAssocInsertSQL->setAccessible(true);
-        $this->assocInsertStmt = $em->getConnection()->prepare($rmAssocInsertSQL->invoke($assocPersister));
+        $this->assocInsertStmt = $this->entityManager->getConnection()->prepare($rmAssocInsertSQL->invoke($assocPersister));
 
         foreach ($this->updated as $entry) {
             list($entity, $ch) = $entry;
             // the changeset might be updated from UOW extra updates
             $ch = array_merge($ch, $uow->getEntityChangeSet($entity));
-            $this->update($em, $entity, $ch);
+            $this->update($this->entityManager, $entity, $ch);
         }
 
         foreach ($this->inserted as $entry) {
             list($entity, $ch) = $entry;
             // the changeset might be updated from UOW extra updates
             $ch = array_merge($ch, $uow->getEntityChangeSet($entity));
-            $this->insert($em, $entity, $ch);
+            $this->insert($this->entityManager, $entity, $ch);
         }
 
         foreach ($this->associated as $entry) {
             list($source, $target, $mapping) = $entry;
-            $this->associate($em, $source, $target, $mapping);
+            $this->associate($this->entityManager, $source, $target, $mapping);
         }
 
         foreach ($this->dissociated as $entry) {
             list($source, $target, $id, $mapping) = $entry;
-            $this->dissociate($em, $source, $target, $id, $mapping);
+            $this->dissociate($this->entityManager, $source, $target, $id, $mapping);
         }
 
         foreach ($this->removed as $entry) {
             list($entity, $id) = $entry;
-            $this->remove($em, $entity, $id);
+            $this->remove($this->entityManager, $entity, $id);
         }
 
         $this->inserted = [];
@@ -338,10 +329,10 @@ class AuditListener
 
                 $this->assocInsertStmt->bindValue($idx++, $data[$field][$name], $typ);
             }
-            $this->assocInsertStmt->execute();
+            $this->assocInsertStmt->executeQuery();
             // use id generator, it will always use identity strategy, since our
             // audit association explicitly sets that.
-            $data[$field] = $meta->idGenerator->generate($em, null);
+            $data[$field] = $meta->idGenerator->generateId($em, null);
         }
 
         $meta = $em->getClassMetadata(AuditLog::class);
@@ -362,7 +353,7 @@ class AuditListener
             }
             $this->auditInsertStmt->bindValue($idx++, $data[$name], $typ);
         }
-        $this->auditInsertStmt->execute();
+        $this->auditInsertStmt->executeQuery();
     }
 
     protected function id(EntityManager $em, $entity)
@@ -469,7 +460,7 @@ class AuditListener
         }
 
         $platform = $em->getConnection()->getDatabasePlatform();
-        switch ($type->getName()) {
+        switch ($type->getBindingType()) {
             case Types::BOOLEAN:
                 return $type->convertToPHPValue($value, $platform); // json supports boolean values
             default:

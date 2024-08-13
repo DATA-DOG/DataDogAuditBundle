@@ -37,7 +37,6 @@ class TestKernel extends Kernel
         $loader->load(function (ContainerBuilder $container): void {
             $container->loadFromExtension('framework');
             $container->loadFromExtension('security', [
-                'enable_authenticator_manager' => true,
                 'firewalls' => [
                     'main' => [
                         'security' => false,

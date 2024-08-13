@@ -20,15 +20,15 @@
         "doctrine/dbal": "^3.2|^4.0",
         "doctrine/doctrine-bundle": "^2.9",
         "doctrine/orm": "^2.13|^3.0",
-        "symfony/security-bundle": "^6.4",
-        "symfony/framework-bundle": "^6.4",
-        "symfony/console": "^6.4"
+        "symfony/security-bundle": "^6.4 | ^7.0",
+        "symfony/framework-bundle": "^6.4 | ^7.0",
+        "symfony/console": "^6.4 | ^7.0"
     },
     "require-dev": {
         "ext-pdo": "*",
         "ext-pdo_sqlite": "*",
         "phpunit/phpunit": "^9",
-        "symfony/phpunit-bridge": "^6.4"
+        "symfony/phpunit-bridge": "^6.4 | ^7.0"
     },
     "autoload": {
         "files": [

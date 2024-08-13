@@ -31,6 +31,9 @@
         "symfony/phpunit-bridge": "^6.4"
     },
     "autoload": {
+        "files": [
+            "src/aliases.php"
+        ],
         "psr-4": {
             "DataDog\\AuditBundle\\": "src"
         }

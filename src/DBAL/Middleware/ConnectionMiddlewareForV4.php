@@ -6,7 +6,7 @@ use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Driver\Middleware\AbstractConnectionMiddleware;
 
-class ConnectionMiddleware extends AbstractConnectionMiddleware
+class ConnectionMiddlewareForV4 extends AbstractConnectionMiddleware
 {
     public function __construct(
         Connection $wrappedConnection,

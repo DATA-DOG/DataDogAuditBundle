@@ -120,4 +120,23 @@ final class AuditListenerTest extends OrmTestCase
 
         $this->assertCount(6, $em->createQuery('SELECT l FROM '.AuditLog::class.' l')->getResult());
     }
+
+    public function testExcludeField(): void
+    {
+        $this->resetDatabase();
+
+        $em = $this->getDoctrine()->getManager();
+
+        $tag = new Tag();
+        $tag->setName('Books');
+
+        $em->persist($tag);
+        $em->flush();
+
+        $tag->setName('Movies');
+
+        $em->flush();
+
+        $this->assertCount(2, $em->createQuery('SELECT l FROM '.AuditLog::class.' l')->getResult());
+    }
 }

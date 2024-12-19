@@ -17,7 +17,7 @@ class TestKernel extends Kernel
 {
     private ?string $projectDir = null;
 
-    public function __construct()
+    public function __construct(private readonly array $dataDogAuditConfig = [])
     {
         parent::__construct('test', true);
     }
@@ -55,7 +55,7 @@ class TestKernel extends Kernel
                     ],
                 ],
             ]);
-            $container->loadFromExtension('data_dog_audit');
+            $container->loadFromExtension('data_dog_audit', $this->dataDogAuditConfig);
 
             $container->register('logger', NullLogger::class);
         });

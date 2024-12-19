@@ -2,6 +2,7 @@
 
 namespace DataDog\AuditBundle\EventListener;
 
+use DataDog\AuditBundle\DBAL\Middleware\AuditFlushMiddleware;
 use DataDog\AuditBundle\Entity\Association;
 use DataDog\AuditBundle\Entity\AuditLog;
 use Doctrine\DBAL\Types\Type;
@@ -26,6 +27,8 @@ class AuditListener
 
     protected $unauditedEntities = [];
 
+    protected $entities = [];
+
     protected $blameImpersonator = false;
 
     protected $inserted = []; // [$source, $changeset]
@@ -49,7 +52,8 @@ class AuditListener
     public function __construct(
         private readonly TokenStorageInterface $securityTokenStorage,
         private readonly EntityManagerInterface $entityManager
-    ) {}
+    ) {
+    }
 
     public function setLabeler(?callable $labeler = null): self
     {
@@ -79,6 +83,27 @@ class AuditListener
         }
     }
 
+    public function addEntities(array $entities): void
+    {
+        $this->entities = $entities;
+
+        $auditedEntities = [];
+        $unauditedEntities = [];
+
+        foreach ($entities as $fqcn => $data) {
+            if (
+                $data['mode'] === 'include' ||
+                ($data['mode'] === 'exclude' && !empty($data['fields']))
+            ) {
+                $auditedEntities[] = $fqcn;
+            } elseif ($data['mode'] === 'exclude' && empty($data['fields'])) {
+                $unauditedEntities[] = $fqcn;
+            }
+        }
+        $this->addAuditedEntities($auditedEntities);
+        $this->addUnauditedEntities($unauditedEntities);
+    }
+
     public function setBlameImpersonator($blameImpersonator)
     {
         // blame impersonator user instead of logged user (where applicable)
@@ -94,18 +119,18 @@ class AuditListener
     {
         if (!empty($this->auditedEntities)) {
             // only selected entities are audited
-            $isEntityUnaudited = TRUE;
+            $isEntityUnaudited = true;
             foreach (array_keys($this->auditedEntities) as $auditedEntity) {
                 if ($entity instanceof $auditedEntity) {
-                    $isEntityUnaudited = FALSE;
+                    $isEntityUnaudited = false;
                     break;
                 }
             }
         } else {
-            $isEntityUnaudited = FALSE;
+            $isEntityUnaudited = false;
             foreach (array_keys($this->unauditedEntities) as $unauditedEntity) {
                 if ($entity instanceof $unauditedEntity) {
-                    $isEntityUnaudited = TRUE;
+                    $isEntityUnaudited = true;
                     break;
                 }
             }
@@ -121,7 +146,7 @@ class AuditListener
 
         $middlewares = $this->entityManager->getConnection()->getConfiguration()->getMiddlewares();
         foreach ($middlewares as $middleware) {
-            if($middleware::class === 'DataDog\AuditBundle\DBAL\Middleware\AuditFlushMiddleware'){
+            if ($middleware::class === AuditFlushMiddleware::class) {
                 $middleware->flushHandler = [$this, 'flush'];
             }
         }
@@ -365,7 +390,31 @@ class AuditListener
             Type::getType($meta->fieldMappings[$pk]['type']),
             $meta->getReflectionProperty($pk)->getValue($entity)
         );
+
         return $pk;
+    }
+
+    protected function isDiff(object $entity, string $fieldName): bool
+    {
+        if (array_key_exists($entity::class, $this->entities)) { // New logic
+            $entityConfig = $this->entities[$entity::class];
+
+            return (
+                (
+                    $entityConfig['mode'] === 'include' &&
+                    (
+                        !empty($entityConfig['fields']) && in_array($fieldName, $entityConfig['fields']) ||
+                        empty($entityConfig['fields'])
+                    )
+                ) ||
+                (
+                    $entityConfig['mode'] === 'exclude' &&
+                    !empty($entityConfig['fields']) && !in_array($fieldName, $entityConfig['fields'])
+                )
+            );
+        } else { // Old logic
+            return true;
+        }
     }
 
     protected function diff(EntityManager $em, $entity, array $ch): array
@@ -375,23 +424,30 @@ class AuditListener
         $diff = [];
         foreach ($ch as $fieldName => list($old, $new)) {
             if ($meta->hasField($fieldName) && !array_key_exists($fieldName, $meta->embeddedClasses)) {
-                $mapping = $meta->fieldMappings[$fieldName];
-                $diff[$fieldName] = [
-                    'old' => $this->value($em, Type::getType($mapping['type']), $old),
-                    'new' => $this->value($em, Type::getType($mapping['type']), $new),
-                    'col' => $mapping['columnName'],
-                ];
+                if ($this->isDiff($entity, $fieldName)) {
+                    $mapping = $meta->fieldMappings[$fieldName];
+
+                    $diff[$fieldName] = [
+                        'old' => $this->value($em, Type::getType($mapping['type']), $old),
+                        'new' => $this->value($em, Type::getType($mapping['type']), $new),
+                        'col' => $mapping['columnName'],
+                    ];
+                }
             } elseif ($meta->hasAssociation($fieldName) && $meta->isSingleValuedAssociation($fieldName)) {
-                $mapping = $meta->associationMappings[$fieldName];
-                $colName = $meta->getSingleAssociationJoinColumnName($fieldName);
-                $assocMeta = $em->getClassMetadata($mapping['targetEntity']);
-                $diff[$fieldName] = [
-                    'old' => $this->assoc($em, $old),
-                    'new' => $this->assoc($em, $new),
-                    'col' => $colName,
-                ];
+                if ($this->isDiff($entity, $fieldName)) {
+                    $mapping = $meta->associationMappings[$fieldName];
+                    $colName = $meta->getSingleAssociationJoinColumnName($fieldName);
+                    $assocMeta = $em->getClassMetadata($mapping['targetEntity']);
+
+                    $diff[$fieldName] = [
+                        'old' => $this->assoc($em, $old),
+                        'new' => $this->assoc($em, $new),
+                        'col' => $colName,
+                    ];
+                }
             }
         }
+
         return $diff;
     }
 
@@ -421,6 +477,7 @@ class AuditListener
     {
         // strip prefixes and repeating garbage from name
         $className = preg_replace("/^(.+\\\)?(.+)(Bundle\\\Entity)/", "$2", $className);
+
         // underscore and lowercase each subdirectory
         return implode('.', array_map(function ($name) {
             return strtolower(preg_replace('/(?<=\\w)(?=[A-Z])/', '_$1', $name));
@@ -481,6 +538,7 @@ class AuditListener
         if ($token && $token->getUser() instanceof UserInterface && \method_exists($token->getUser(), 'getId')) {
             return $this->assoc($em, $token->getUser());
         }
+
         return null;
     }
 
@@ -498,6 +556,7 @@ class AuditListener
                 return $role->getSource()->getUser();
             }
         }
+
         return null;
     }
 

@@ -11,7 +11,7 @@ class DataDogAuditExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../../config'));
         $loader->load('services.php');
 
         $configuration = new Configuration();
@@ -19,9 +19,11 @@ class DataDogAuditExtension extends Extension
 
         $auditListener = $container->getDefinition('data_dog_audit.listener.audit');
 
-        if (isset($config['audited_entities']) && !empty($config['audited_entities'])) {
+        if (isset($config['entities'])) {
+            $auditListener->addMethodCall('addEntities', array($config['entities']));
+        } elseif (isset($config['audited_entities']) && !empty($config['audited_entities'])) {
             $auditListener->addMethodCall('addAuditedEntities', array($config['audited_entities']));
-        } else if (isset($config['unaudited_entities'])) {
+        } elseif (isset($config['unaudited_entities'])) {
             $auditListener->addMethodCall('addUnauditedEntities', array($config['unaudited_entities']));
         }
 

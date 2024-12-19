@@ -78,6 +78,60 @@ data_dog_audit:
 
 You can specify either audited or unaudited entities. If both are specified, only audited entities would be taken into account.
 
+### Specify Audited Entities with specific fields (extends version)
+
+The new configuration has been expanded with fields that can be set as excluded or highlighted.
+
+```php
+class Test {
+    private string $name;
+    private bool $noImportant;
+    private \DateTime $createdAt;
+    private \DateTime $modifiedAt;
+}
+```
+
+When we only want to audit a few fields:
+```yaml
+data_dog_audit:
+    entities:
+        App\Entity\Test:
+            mode: include
+            fields:
+                - name
+                - createdAt
+                - modifiedAt
+```
+OR
+```yaml
+data_dog_audit:
+    entities:
+        App\Entity\Test:
+            mode: exclude
+            fields:
+                - noImportant
+```
+
+The old logic was also included in the new configuration:
+
+If we want to audit everything on an entity
+```yaml
+data_dog_audit:
+    entities:
+        App\Entity\Test:
+            mode: include
+            fields: ~
+```
+
+If we want to exclude an entity
+```yaml
+data_dog_audit:
+    entities:
+        App\Entity\Test:
+            mode: exclude
+            fields: ~
+```
+
 ### Impersonation
 
 Sometimes, you might also want to blame the `impersonator` user instead of the `impersonated` one.

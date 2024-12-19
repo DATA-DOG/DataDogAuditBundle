@@ -23,6 +23,8 @@
         <field name="class" />
 
         <indexes>
+            <index columns="class,fk"/>
+            <index columns="tbl,fk"/>
             <index columns="fk"/>
         </indexes>
 

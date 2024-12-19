@@ -24,6 +24,8 @@
         <one-to-one field="blame" target-entity="Association" />
 
         <indexes>
+            <index columns="tbl"/>
+            <index columns="action"/>
             <index columns="logged_at"/>
         </indexes>
 

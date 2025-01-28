@@ -176,6 +176,9 @@ class AuditListener
                 continue;
             }
             $mapping = $collection->getMapping();
+            if (!is_array($mapping)) {
+                $mapping = $mapping->toArray();
+            }
             if (!$mapping['isOwningSide'] || $mapping['type'] !== ClassMetadata::MANY_TO_MANY) {
                 continue; // ignore inverse side or one to many relations
             }

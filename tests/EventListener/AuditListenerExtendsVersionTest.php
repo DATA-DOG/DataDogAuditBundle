@@ -23,12 +23,11 @@ final class AuditListenerExtendsVersionTest extends OrmTestCase
         callable $callable,
         array $expectedFields
     ): void {
-        $this->kernel = new TestKernel([
+        $this->bootKernel([
             'entities' => [
                 Account::class => $dataDogAuditConfig,
             ],
         ]);
-        $this->kernel->boot();
 
         $this->loadFixtures();
 

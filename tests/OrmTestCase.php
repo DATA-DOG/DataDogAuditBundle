@@ -14,9 +14,9 @@ abstract class OrmTestCase extends TestCase
 {
     protected KernelInterface $kernel;
 
-    protected function setUp(): void
+    protected function bootKernel(array $dataDogAuditConfig): void
     {
-        $this->kernel = new TestKernel();
+        $this->kernel = new TestKernel($dataDogAuditConfig);
         $this->kernel->boot();
     }
 

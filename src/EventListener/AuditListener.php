@@ -23,23 +23,23 @@ class AuditListener
      */
     protected $labeler;
 
-    protected $auditedEntities = [];
+    protected array $auditedEntities = [];
 
-    protected $unauditedEntities = [];
+    protected array $unauditedEntities = [];
 
-    protected $entities = [];
+    protected array $entities = [];
 
-    protected $blameImpersonator = false;
+    protected bool $blameImpersonator = false;
 
-    protected $inserted = []; // [$source, $changeset]
+    protected array $inserted = []; // [$source, $changeset]
 
-    protected $updated = []; // [$source, $changeset]
+    protected array $updated = []; // [$source, $changeset]
 
-    protected $removed = []; // [$source, $id]
+    protected array $removed = []; // [$source, $id]
 
-    protected $associated = [];   // [$source, $target, $mapping]
+    protected array $associated = [];   // [$source, $target, $mapping]
 
-    protected $dissociated = []; // [$source, $target, $id, $mapping]
+    protected array $dissociated = []; // [$source, $target, $id, $mapping]
 
     protected $assocInsertStmt;
 
@@ -67,7 +67,7 @@ class AuditListener
         return $this->labeler;
     }
 
-    public function addAuditedEntities(array $auditedEntities)
+    public function addAuditedEntities(array $auditedEntities): void
     {
         // use entity names as array keys for easier lookup
         foreach ($auditedEntities as $auditedEntity) {
@@ -75,7 +75,7 @@ class AuditListener
         }
     }
 
-    public function addUnauditedEntities(array $unauditedEntities)
+    public function addUnauditedEntities(array $unauditedEntities): void
     {
         // use entity names as array keys for easier lookup
         foreach ($unauditedEntities as $unauditedEntity) {
@@ -104,18 +104,18 @@ class AuditListener
         $this->addUnauditedEntities($unauditedEntities);
     }
 
-    public function setBlameImpersonator($blameImpersonator)
+    public function setBlameImpersonator(bool $blameImpersonator): void
     {
         // blame impersonator user instead of logged user (where applicable)
         $this->blameImpersonator = $blameImpersonator;
     }
 
-    public function getUnauditedEntities()
+    public function getUnauditedEntities(): array
     {
         return array_keys($this->unauditedEntities);
     }
 
-    protected function isEntityUnaudited($entity)
+    protected function isEntityUnaudited(object $entity): bool
     {
         if (!empty($this->auditedEntities)) {
             // only selected entities are audited
@@ -213,7 +213,7 @@ class AuditListener
         }
     }
 
-    public function flush()
+    public function flush(): void
     {
         $uow = $this->entityManager->getUnitOfWork();
 
@@ -262,7 +262,7 @@ class AuditListener
         $this->dissociated = [];
     }
 
-    protected function associate(EntityManager $em, $source, $target, array $mapping): void
+    protected function associate(EntityManager $em, ?object $source, ?object $target, array $mapping): void
     {
         $this->audit($em, [
             'source' => $this->assoc($em, $source),
@@ -274,7 +274,7 @@ class AuditListener
         ]);
     }
 
-    protected function dissociate(EntityManager $em, $source, $target, $id, array $mapping): void
+    protected function dissociate(EntityManager $em, ?object $source, ?object $target, string|int $id, array $mapping): void
     {
         $this->audit($em, [
             'source' => $this->assoc($em, $source),
@@ -286,7 +286,7 @@ class AuditListener
         ]);
     }
 
-    protected function insert(EntityManager $em, $entity, array $ch): void
+    protected function insert(EntityManager $em, object $entity, array $ch): void
     {
         $diff = $this->diff($em, $entity, $ch);
         if (empty($diff)) {
@@ -303,7 +303,7 @@ class AuditListener
         ]);
     }
 
-    protected function update(EntityManager $em, $entity, array $ch): void
+    protected function update(EntityManager $em, object $entity, array $ch): void
     {
         $diff = $this->diff($em, $entity, $ch);
         if (empty($diff)) {
@@ -320,7 +320,7 @@ class AuditListener
         ]);
     }
 
-    protected function remove(EntityManager $em, $entity, $id): void
+    protected function remove(EntityManager $em, object $entity, string|int $id): void
     {
         $meta = $em->getClassMetadata(get_class($entity));
         $source = array_merge($this->assoc($em, $entity), ['fk' => $id]);
@@ -381,7 +381,7 @@ class AuditListener
         $this->auditInsertStmt->executeQuery();
     }
 
-    protected function id(EntityManager $em, $entity)
+    protected function id(EntityManager $em, object $entity)
     {
         $meta = $em->getClassMetadata(get_class($entity));
         $pk = $meta->getSingleIdentifierFieldName();
@@ -417,7 +417,7 @@ class AuditListener
         }
     }
 
-    protected function diff(EntityManager $em, $entity, array $ch): array
+    protected function diff(EntityManager $em, object $entity, array $ch): array
     {
         $uow = $em->getUnitOfWork();
         $meta = $em->getClassMetadata(get_class($entity));
@@ -451,7 +451,7 @@ class AuditListener
         return $diff;
     }
 
-    protected function assoc(EntityManager $em, $association = null): ?array
+    protected function assoc(EntityManager $em, ?object $association = null): ?array
     {
         if (null === $association) {
             return null;
@@ -484,7 +484,7 @@ class AuditListener
         }, explode('\\', $className)));
     }
 
-    protected function label(EntityManager $em, $entity)
+    protected function label(EntityManager $em, object $entity)
     {
         if (is_callable($this->labeler)) {
             return call_user_func($this->labeler, $entity);
@@ -542,7 +542,7 @@ class AuditListener
         return null;
     }
 
-    private function getImpersonatorUserFromSecurityToken($token)
+    private function getImpersonatorUserFromSecurityToken(?TokenInterface $token)
     {
         if (false === $this->blameImpersonator) {
             return null;
@@ -560,10 +560,6 @@ class AuditListener
         return null;
     }
 
-    /**
-     * @param TokenInterface $token
-     * @return array
-     */
     private function getRoles(TokenInterface $token): array
     {
         if (method_exists($token, 'getRoleNames')) {

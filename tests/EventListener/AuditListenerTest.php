@@ -8,18 +8,13 @@ use DataDog\AuditBundle\Entity\AuditLog;
 use DataDog\AuditBundle\Tests\Entity\Post;
 use DataDog\AuditBundle\Tests\Entity\Tag;
 use DataDog\AuditBundle\Tests\OrmTestCase;
+use DataDog\AuditBundle\Tests\TestKernel;
 
 final class AuditListenerTest extends OrmTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->loadFixtures();
-    }
-
     public function testSingleEntityCreation(): void
     {
+        $this->includeKernelBoot();
         $this->resetDatabase();
 
         $em = $this->getDoctrine()->getManager();
@@ -35,6 +30,7 @@ final class AuditListenerTest extends OrmTestCase
 
     public function testSingleEntityUpdate(): void
     {
+        $this->includeKernelBoot();
         $this->resetDatabase();
 
         $em = $this->getDoctrine()->getManager();
@@ -54,6 +50,7 @@ final class AuditListenerTest extends OrmTestCase
 
     public function testSingleEntityDelete(): void
     {
+        $this->includeKernelBoot();
         $this->resetDatabase();
 
         $em = $this->getDoctrine()->getManager();
@@ -73,6 +70,7 @@ final class AuditListenerTest extends OrmTestCase
 
     public function testEntityRelationCreate(): void
     {
+        $this->includeKernelBoot();
         $this->resetDatabase();
 
         $em = $this->getDoctrine()->getManager();
@@ -94,6 +92,7 @@ final class AuditListenerTest extends OrmTestCase
 
     public function testEntityRelationUpdate(): void
     {
+        $this->includeKernelBoot();
         $this->resetDatabase();
 
         $em = $this->getDoctrine()->getManager();
@@ -123,6 +122,7 @@ final class AuditListenerTest extends OrmTestCase
 
     public function testExcludeField(): void
     {
+        $this->excludeKernelBoot();
         $this->resetDatabase();
 
         $em = $this->getDoctrine()->getManager();
@@ -138,5 +138,28 @@ final class AuditListenerTest extends OrmTestCase
         $em->flush();
 
         $this->assertCount(2, $em->createQuery('SELECT l FROM '.AuditLog::class.' l')->getResult());
+    }
+
+    private function includeKernelBoot(): void
+    {
+        $this->bootKernel([
+            'audited_entities' => [
+                Tag::class,
+                Post::class,
+            ],
+        ]);
+
+        $this->loadFixtures();
+    }
+
+    private function excludeKernelBoot(): void
+    {
+        $this->bootKernel([
+            'unaudited_entities' => [
+                Tag::class,
+            ],
+        ]);
+
+        $this->loadFixtures();
     }
 }

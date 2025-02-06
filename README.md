@@ -52,7 +52,7 @@ php app/console doctrine:schema:update --force
 **audit** entities will be mapped automatically if you run schema update or similar.
 And all the database changes will be reflected in the audit log afterwards.
 
-### Unaudited Entities
+### Unaudited Entities (deprecated, use `entities`)
 
 Sometimes, you might not want to create audit log entries for particular entities.
 You can achieve this by listing those entities under the `unaudited_entities` configuration
@@ -64,7 +64,7 @@ data_dog_audit:
         - App\Entity\NoAuditForThis
 ```
 
-### Specify Audited Entities
+### Specify Audited Entities (deprecated, use `entities`)
 
 Sometimes, it is also possible, that you want to create audit log entries only for particular entities.
 You can achieve it quite similar to unaudited entities. You can list them under the `audited_entities`

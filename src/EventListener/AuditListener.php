@@ -222,11 +222,9 @@ class AuditListener
 
         $auditPersister = $uow->getEntityPersister(AuditLog::class);
         $rmAuditInsertSQL = new \ReflectionMethod($auditPersister, 'getInsertSQL');
-        $rmAuditInsertSQL->setAccessible(true);
         $this->auditInsertStmt = $this->entityManager->getConnection()->prepare($rmAuditInsertSQL->invoke($auditPersister));
         $assocPersister = $uow->getEntityPersister(Association::class);
         $rmAssocInsertSQL = new \ReflectionMethod($assocPersister, 'getInsertSQL');
-        $rmAssocInsertSQL->setAccessible(true);
         $this->assocInsertStmt = $this->entityManager->getConnection()->prepare($rmAssocInsertSQL->invoke($assocPersister));
 
         foreach ($this->updated as $entry) {

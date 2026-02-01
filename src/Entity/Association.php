@@ -16,6 +16,14 @@ class Association
 
     private string $class;
 
+    public function __construct(string $type, ?string $table, ?string $label, int $fk, string $class): void{
+        $this->typ = $type;
+        $this->tbl = $table;
+        $this->label = $label;
+        $this->fk = $fk;
+        $this->class = $class;
+    }
+
     public function getId(): ?string
     {
         return $this->id;

@@ -16,7 +16,7 @@ class Association
 
     private string $class;
 
-    public function __construct(string $type, ?string $table, ?string $label, int $fk, string $class): void{
+    public function __construct(string $type, ?string $table, ?string $label, int $fk, string $class){
         $this->typ = $type;
         $this->tbl = $table;
         $this->label = $label;

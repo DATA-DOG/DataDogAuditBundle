@@ -20,7 +20,7 @@ class AuditLog
 
     private \DateTimeInterface $loggedAt;
 
-    public function __construct(string $action, string $table, ?Association $source=null, ?Association $target=null,  ?Association $blame=null, ?array $diff=[], ?\DateTimeInterface $date=null): void
+    public function __construct(string $action, string $table, ?Association $source=null, ?Association $target=null,  ?Association $blame=null, ?array $diff=[], ?\DateTimeInterface $date=null)
     {
         $this->action = $action;
         $this->tbl = $table;

@@ -46,7 +46,7 @@ class TestKernel extends Kernel
             $container->loadFromExtension('doctrine', [
                 'dbal' => ['driver' => 'pdo_sqlite'],
                 'orm' => [
-                    'auto_generate_proxy_classes' => true,
+                    'auto_mapping' => false,
                     'mappings' => [
                         'DataDogAuditBundleFixtures' => [
                             'dir' => __DIR__.'/Entity',

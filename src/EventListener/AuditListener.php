@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\SwitchUserToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Role\SwitchUserRole;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -548,8 +549,19 @@ class AuditListener
         if (false === $this->blameImpersonator) {
             return null;
         }
+
         if (!$token instanceof TokenInterface) {
             return null;
+        }
+
+        if ($token instanceof SwitchUserToken) {
+            $user = $token->getOriginalToken()->getUser();
+
+            if (!$user instanceof UserInterface) {
+                return null;
+            }
+
+            return $user;
         }
 
         foreach ($this->getRoles($token) as $role) {

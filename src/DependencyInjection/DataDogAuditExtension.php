@@ -19,11 +19,11 @@ class DataDogAuditExtension extends Extension
 
         $auditListener = $container->getDefinition('data_dog_audit.listener.audit');
 
-        if (isset($config['entities'])) {
+        if (!empty($config['entities'])) {
             $auditListener->addMethodCall('addEntities', [$config['entities']]);
         } elseif (isset($config['audited_entities']) && !empty($config['audited_entities'])) {
             $auditListener->addMethodCall('addAuditedEntities', [$config['audited_entities']]);
-        } elseif (isset($config['unaudited_entities'])) {
+        } elseif (!empty($config['unaudited_entities'])) {
             $auditListener->addMethodCall('addUnauditedEntities', [$config['unaudited_entities']]);
         }
 

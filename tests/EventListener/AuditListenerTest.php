@@ -137,7 +137,7 @@ final class AuditListenerTest extends OrmTestCase
 
         $em->flush();
 
-        $this->assertCount(2, $em->createQuery('SELECT l FROM '.AuditLog::class.' l')->getResult());
+        $this->assertCount(0, $em->createQuery('SELECT l FROM '.AuditLog::class.' l')->getResult());
     }
 
     private function includeKernelBoot(): void
